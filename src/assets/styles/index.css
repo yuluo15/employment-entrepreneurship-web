@@ -1,0 +1,18 @@
+body {
+  overflow: hidden;
+  color: var(--el-text-color-primary);
+}
+
+/* 修复侧边栏图标过大问题 */
+.el-menu-item svg,
+.el-sub-menu__title svg {
+  width: 18px !important;
+  height: 18px !important;
+  margin-right: 10px; /* 图标和文字的间距 */
+}
+
+/* 这是一个通用的 icon 修复，防止其他地方也炸了 */
+.el-icon {
+  width: 1em;
+  height: 1em;
+}
