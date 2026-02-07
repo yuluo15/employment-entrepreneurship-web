@@ -42,6 +42,9 @@ export interface JobDetailVo {
     hrName: string
     hrTitle: string
     hrAvatar: string
+    // [新增] 状态字段
+    isCollected?: boolean
+    isApplied?: boolean
 }
 
 // 搜索接口

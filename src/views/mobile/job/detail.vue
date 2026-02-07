@@ -79,18 +79,21 @@
       </div>
     </div>
 
-    <van-action-bar style="z-index: 1000;">
-      <van-action-bar-icon icon="chat-o" text="沟通" color="#333" />
-      <van-action-bar-icon icon="star-o" text="收藏" color="#333" />
-<!--      <van-action-bar-button-->
-<!--          color="linear-gradient(to right, #4facfe 0%, #00f2fe 100%)"-->
-<!--          type="warning"-->
-<!--          text="分享职位"-->
-<!--      />-->
+    <van-action-bar style="z-index: 2000; padding-bottom: env(safe-area-inset-bottom);">
+<!--      <van-action-bar-icon icon="chat-o" text="沟通" color="#333" />-->
+      <van-action-bar-icon
+          :icon="isCollected ? 'star' : 'star-o'"
+          :text="isCollected ? '已收藏' : '收藏'"
+          :color="isCollected ? '#ff5000' : '#333'"
+          @click="handleCollect"
+      />
+
       <van-action-bar-button
-          color="linear-gradient(to right, #43e97b 0%, #38f9d7 100%)"
+          :color="isApplied ? '#c8c9cc' : 'linear-gradient(to right, #43e97b 0%, #38f9d7 100%)'"
           type="primary"
-          text="立即投递"
+          :text="isApplied ? '已投递' : '立即投递'"
+          :disabled="isApplied"
+          :loading="applyLoading"
           @click="handleApply"
       />
     </van-action-bar>
@@ -102,13 +105,18 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getJobDetail, type JobDetailVo } from '@/api/mobile/job'
 import { useEventListener } from '@vueuse/core'
-import { showToast } from 'vant'
+import { showToast, showSuccessToast, showFailToast } from 'vant'
+import { toggleCollection, applyJob } from '@/api/mobile/interaction' // [新增]
 
 const route = useRoute()
 const router = useRouter()
 const detail = ref<Partial<JobDetailVo>>({})
 const scrollTop = ref(0)
 const loading = ref(true)
+
+const isCollected = ref(false)
+const isApplied = ref(false)
+const applyLoading = ref(false)
 
 useEventListener(window, 'scroll', () => {
   scrollTop.value = window.scrollY
@@ -120,6 +128,11 @@ onMounted(async () => {
     const id = route.params.id as string
     const res = await getJobDetail(id)
     detail.value = res.data
+
+    // [核心修改] 初始化状态：从后端数据同步
+    // 使用 !! 确保转为 boolean，防止后端返回 null
+    isCollected.value = !!res.data.isCollected
+    isApplied.value = !!res.data.isApplied
   } finally {
     // 模拟一下网络延迟，让骨架屏显示一会儿，更有质感
     setTimeout(() => {
@@ -140,8 +153,44 @@ const openMap = (address?: string, city?: string) => {
   window.location.href = `http://api.map.baidu.com/geocoder?address=${encodeURIComponent(fullKeyword)}&output=html&src=webapp.gxcj_system`
 }
 
-const handleApply = () => {
-  showToast('简历投递成功！')
+// [新增] 处理收藏
+const handleCollect = async () => {
+  if (!detail.value.id) return
+  try {
+    // 调用后端切换接口
+    const res = await toggleCollection({
+      targetId: detail.value.id,
+      type: 'JOB'
+    })
+    // 后端直接返回 true/false 表示当前最新状态
+    isCollected.value = res.data
+    showToast(isCollected.value ? '收藏成功' : '已取消收藏')
+  } catch (error) {
+    // 错误由 request.ts 拦截器处理，这里不用写
+  }
+}
+
+// [新增] 处理投递
+const handleApply = async () => {
+  if (!detail.value.id) return
+
+  applyLoading.value = true
+  try {
+    const res = await applyJob({
+      jobId: detail.value.id // 注意大小写匹配后端 DTO
+    })
+
+    if (res.data) {
+      isApplied.value = true
+      showSuccessToast('简历投递成功！')
+    } else {
+      showFailToast('投递失败')
+    }
+  } catch (error) {
+    // 失败逻辑
+  } finally {
+    applyLoading.value = false
+  }
 }
 </script>
 

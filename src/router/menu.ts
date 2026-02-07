@@ -221,7 +221,7 @@ const studentMenu: RouteRecordRaw[] = [
     path: 'profile',
     name: 'StudentProfile',
     meta: { title: '个人中心' },
-    component: () => import('@/views/mobile/home/index.vue')
+    component: () => import('@/views/mobile/profile/index.vue')
   },
   // 简历编辑页（通常不显示在 TabBar，可以隐藏）
   // {

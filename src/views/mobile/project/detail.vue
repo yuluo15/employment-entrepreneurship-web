@@ -82,8 +82,15 @@
     </div>
 
     <van-action-bar style="z-index: 2000; padding-bottom: env(safe-area-inset-bottom);">
-      <van-action-bar-icon icon="share-o" text="分享" />
-      <van-action-bar-icon icon="star-o" text="关注" />
+<!--      <van-action-bar-icon icon="share-o" text="分享" />-->
+
+      <van-action-bar-icon
+          :icon="isCollected ? 'star' : 'star-o'"
+          :text="isCollected ? '已关注' : '关注'"
+          :color="isCollected ? '#ff5000' : '#333'"
+          @click="handleCollect"
+      />
+
       <van-action-bar-button
           color="#7c3aed"
           type="primary"
@@ -100,10 +107,13 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getProjectDetail, type ProjectDetailVo } from '@/api/mobile/project'
 import { showToast } from 'vant'
+import { toggleCollection } from '@/api/mobile/interaction' // [新增]
 
 const route = useRoute()
 const detail = ref<Partial<ProjectDetailVo>>({})
 const loading = ref(true)
+
+const isCollected = ref(false) // [新增] 收藏状态
 
 onMounted(async () => {
   loading.value = true
@@ -111,10 +121,27 @@ onMounted(async () => {
     const id = route.params.id as string
     const res = await getProjectDetail(id)
     detail.value = res.data
+    // [核心修改] 初始化收藏状态
+    isCollected.value = !!res.data.isCollected
   } finally {
     setTimeout(() => { loading.value = false }, 300)
   }
 })
+
+// [新增] 处理收藏/关注
+const handleCollect = async () => {
+  if (!detail.value.projectId) return // 注意 ProjectDetailVo 里的 ID 字段名是 projectId
+  try {
+    const res = await toggleCollection({
+      targetId: detail.value.projectId,
+      type: 'PROJECT'
+    })
+    isCollected.value = res.data
+    showToast(isCollected.value ? '关注成功' : '已取消关注')
+  } catch (error) {
+    console.error(error)
+  }
+}
 
 const contactLeader = () => {
   showToast('已向负责人发送招呼')

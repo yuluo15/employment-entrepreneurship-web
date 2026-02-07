@@ -13,6 +13,8 @@ export interface ProjectDetailVo {
     teamSize: number
     description: string
     needs: string
+    // [新增] 状态字段
+    isCollected?: boolean
 }
 
 export function getProjectDetail(id: string) {
