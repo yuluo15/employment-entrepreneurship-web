@@ -230,6 +230,39 @@ const studentMenu: RouteRecordRaw[] = [
   //   meta: { title: '编辑简历', hidden: true, hideNavBar: false },
   //   component: () => import('@/views/mobile/resume/edit.vue')
   // }
+  {
+    path: 'settings/account',
+    name: 'AccountSettings',
+    meta: { title: '账号与安全', hideNavBar: false, hideTabBar: true }, // 这里 hideNavBar: false 让页面自己控制或者使用系统默认
+    component: () => import('@/views/mobile/settings/account.vue')
+  },
+  // [新增] 投递记录 (复用组件)
+  {
+    path: 'my/delivery',
+    name: 'MyDelivery',
+    meta: { title: '我的投递', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/my/delivery.vue')
+  },
+  {
+    path: 'my/interview', // 专门的路由，指向同一个组件，方便Profile页跳转
+    name: 'MyInterview',
+    meta: { title: '我的面试', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/my/delivery.vue')
+  },
+  {
+    path: 'my/offer',
+    name: 'MyOffer',
+    meta: { title: '我的OFFER', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/my/delivery.vue')
+  },
+
+  // [新增] 我的收藏
+  {
+    path: 'my/collection',
+    name: 'MyCollection',
+    meta: { title: '我的收藏', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/my/collection.vue')
+  }
 ]
 const companyMenu: RouteRecordRaw[] = [
   { path: 'home', name: 'CompanyHome', meta: { title: '企业首页', icon: House }, component: () => import('@/views/admin/home/index.vue') }
