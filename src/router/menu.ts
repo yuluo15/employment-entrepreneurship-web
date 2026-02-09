@@ -262,6 +262,54 @@ const studentMenu: RouteRecordRaw[] = [
     name: 'MyCollection',
     meta: { title: '我的收藏', hideNavBar: false, hideTabBar: true },
     component: () => import('@/views/mobile/my/collection.vue')
+  },
+  {
+    path: 'resume/edit', // 这里作为总览入口
+    name: 'ResumeDashboard',
+    meta: { title: '我的简历', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/resume/index.vue')
+  },
+
+  // 2. 分块编辑页 (子页面)
+  {
+    path: 'resume/edit/intent',
+    name: 'ResumeEditIntent',
+    meta: { title: '编辑求职意向', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/resume/modules/edit-intent.vue')
+  },
+  {
+    path: 'resume/edit/education',
+    name: 'ResumeEditEducation',
+    meta: { title: '教育经历', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/resume/modules/edit-education.vue')
+  },
+  {
+    path: 'resume/edit/experience',
+    name: 'ResumeEditExperience',
+    meta: { title: '实习与项目', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/resume/modules/edit-experience.vue')
+  },
+  // [新增] 我的项目列表
+  {
+    path: 'my/projects',
+    name: 'MyProjects',
+    meta: { title: '我发布的项目', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/my/projects.vue')
+  },
+
+  // [新增] 项目编辑/发布 (复用同一个页面)
+  {
+    path: 'my/project/edit/:id?', // id 是可选参数
+    name: 'ProjectEdit',
+    meta: { title: '发布项目', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/my/project-edit.vue')
+  },
+  // [新增] 个人信息编辑
+  {
+    path: 'profile/info',
+    name: 'ProfileInfo',
+    meta: { title: '个人信息', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/profile/info.vue')
   }
 ]
 const companyMenu: RouteRecordRaw[] = [

@@ -73,7 +73,7 @@
     <div class="mx-3 space-y-3">
 
       <div class="bg-white rounded-xl overflow-hidden shadow-sm">
-        <van-cell center is-link :to="profile.resumeId ? `/student/resume/edit/${profile.resumeId}` : '/student/resume/create'">
+        <van-cell center is-link to="/student/resume/edit">
           <template #icon>
             <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center mr-3">
               <van-icon name="description" class="text-blue-500" size="18" />
@@ -82,15 +82,15 @@
           <template #title>
             <div class="flex justify-between items-center">
               <span>我的在线简历</span>
-              <van-tag
-                  plain
-                  type="primary"
-                  size="medium"
-                  class="mr-2 active:opacity-70"
-                  @click.stop="showResumePreview = true"
-              >
-                <van-icon name="eye-o" class="mr-1"/>预览
-              </van-tag>
+<!--              <van-tag-->
+<!--                  plain-->
+<!--                  type="primary"-->
+<!--                  size="medium"-->
+<!--                  class="mr-2 active:opacity-70"-->
+<!--                  @click.stop="showResumePreview = true"-->
+<!--              >-->
+<!--                <van-icon name="eye-o" class="mr-1"/>预览-->
+<!--              </van-tag>-->
             </div>
           </template>
           <template #label>
@@ -135,9 +135,9 @@
 
     </div>
 
-    <van-popup v-model:show="showResumePreview" position="bottom" round :style="{ height: '85%' }" closeable>
-      <div class="h-full flex items-center justify-center text-gray-500">简历预览内容区域</div>
-    </van-popup>
+<!--    <van-popup v-model:show="showResumePreview" position="bottom" round :style="{ height: '85%' }" closeable>-->
+<!--      <div class="h-full flex items-center justify-center text-gray-500">简历预览内容区域</div>-->
+<!--    </van-popup>-->
 
   </div>
 </template>
@@ -147,6 +147,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { getProfileSummary, type StudentProfileVo } from '@/api/mobile/profile'
+import { useUserStore } from '@/store/userStore' // 引入
+
+const userStore = useUserStore() // 实例化
 
 const router = useRouter()
 const showResumePreview = ref(false)
@@ -165,12 +168,23 @@ onMounted(async () => {
   try {
     const res = await getProfileSummary()
     profile.value = res.data
+
+    // [新增] 将最新的头像和姓名同步到全局 Store
+    // 这样进入简历预览页时，就能直接拿到了
+    if (res.data.avatar || res.data.name) {
+      userStore.setUserInfo({
+        avatar: res.data.avatar,
+        name: res.data.name
+      })
+    }
+
   } catch (error) {
     console.error('获取个人信息失败', error)
   }
 })
 
 const toEditProfile = () => {
-  showToast('跳转个人信息编辑')
+  // 修改为真实的路由路径
+  router.push('/student/profile/info')
 }
 </script>
