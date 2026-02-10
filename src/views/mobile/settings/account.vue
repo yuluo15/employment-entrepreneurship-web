@@ -3,30 +3,27 @@
     <van-nav-bar
         title="账号与安全"
         left-arrow
-        fixed
-        placeholder
         @click-left="$router.back()"
     />
 
-    <div class="mt-3">
+    <div class="mt-4">
       <van-cell-group inset>
-        <van-cell title="修改密码" is-link />
-        <van-cell title="更换手机号" is-link value="138****8888" />
-        <van-cell title="微信绑定" is-link value="已绑定" />
-      </van-cell-group>
-    </div>
-
-    <div class="mt-3">
-      <van-cell-group inset>
-        <van-cell title="注销账号" is-link label="注销后无法恢复，请谨慎操作" />
+        <van-cell
+            title="修改密码"
+            is-link
+            to="/student/settings/password"
+            size="large"
+        />
       </van-cell-group>
     </div>
 
     <div class="px-4 mt-8">
       <van-button
           block
-          color="#fff"
-          class="!text-red-500 !border-none shadow-sm"
+          round
+          color="#ee0a24"
+          size="large"
+          class="shadow-sm"
           @click="handleLogout"
       >
         退出登录
@@ -37,28 +34,34 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { showConfirmDialog } from 'vant'
+import { showConfirmDialog, showSuccessToast } from 'vant'
 import { useUserStore } from '@/store/userStore'
 
 const router = useRouter()
 const userStore = useUserStore()
 
 const handleLogout = () => {
+  // 使用 Vant 的确认弹窗，比原生 alert 美观得多
   showConfirmDialog({
-    title: '提示',
+    title: '温馨提示',
     message: '确定要退出当前账号吗？',
-    confirmButtonColor: '#ee0a24'
+    confirmButtonColor: '#ee0a24', // 确认按钮用红色，警示作用
+    cancelButtonColor: '#666',
+    theme: 'round-button', // 圆角按钮风格，更现代
   })
-      .then(() => {
-        userStore.logout()
-        router.replace('/login')
+      .then(async () => {
+        // 1. 调用 Store 的 logout (内部会调后端接口并清缓存)
+        await userStore.logout()
+
+        showSuccessToast('已退出登录')
+
+        // 2. 跳转回登录页
+        setTimeout(() => {
+          router.replace('/login')
+        }, 500)
       })
       .catch(() => {
-        // on cancel
+        // 点击取消，什么都不做
       })
 }
 </script>
-
-<style scoped>
-/* Vant 样式微调 */
-</style>

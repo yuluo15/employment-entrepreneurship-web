@@ -20,7 +20,7 @@
       <van-tabs v-model:active="activeType" @change="onTabChange" color="#3b82f6">
         <van-tab title="职位" name="JOB" />
         <van-tab title="公司" name="COMPANY" />
-        <van-tab title="项目" name="PROJECT" />
+<!--        <van-tab title="项目" name="PROJECT" />-->
       </van-tabs>
     </div>
 
@@ -108,7 +108,7 @@ defineOptions({ name: 'StudentJobs' })
 
 const router = useRouter()
 const keyword = ref('')
-const activeType = ref<'JOB' | 'COMPANY' | 'PROJECT'>('JOB')
+const activeType = ref<'JOB' | 'COMPANY'>('JOB')
 const list = ref<SearchResultVo[]>([])
 const loading = ref(false)
 const finished = ref(false)

@@ -22,6 +22,18 @@ export interface LoginResult {
     token: string
 }
 
+// [新增] 修改密码参数接口
+export interface PasswordReq {
+    userId: string
+    oldPassword: string
+    newPassword: string
+}
+
+// [新增] 修改密码 API
+export function changePassword(data: PasswordReq) {
+    return request.post('/auth/changePassword', data)
+}
+
 // 4. 修改接口定义：返回值包裹在 ApiResult 中
 export function loginApi(data: LoginParams) {
     // 注意这里：Promise<ApiResult<LoginResult>>

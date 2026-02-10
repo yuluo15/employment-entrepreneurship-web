@@ -215,7 +215,7 @@ const studentMenu: RouteRecordRaw[] = [
     path: 'entrepreneurship',
     name: 'StudentEntrep',
     meta: { title: '创新创业' },
-    component: () => import('@/views/mobile/home/index.vue')
+    component: () => import('@/views/mobile/entrepreneurship/index.vue')
   },
   {
     path: 'profile',
@@ -310,6 +310,12 @@ const studentMenu: RouteRecordRaw[] = [
     name: 'ProfileInfo',
     meta: { title: '个人信息', hideNavBar: false, hideTabBar: true },
     component: () => import('@/views/mobile/profile/info.vue')
+  },
+  {
+    path: 'settings/password',
+    name: 'ChangePassword',
+    meta: { title: '修改密码', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/settings/password.vue')
   }
 ]
 const companyMenu: RouteRecordRaw[] = [
