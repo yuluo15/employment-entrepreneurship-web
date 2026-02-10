@@ -87,66 +87,91 @@ const adminMenu: RouteRecordRaw[] = [
       }
     ]
   },
-
-  // 就业监管中心
   {
     path: 'employment',
-    meta: { title: '就业监管中心' },
-    children: [
-      {
-        path: 'stats',
-        name: 'EmpStats',
-        meta: { title: '就业数据统计' },
-        component: () => import('@/views/admin/employment/stats/index.vue'),
-      },
-      {
-        path: 'verify',
-        name: 'EmpVerify',
-        meta: { title: '就业核查督导' },
-        component: () => import('@/views/icon/index.vue'),
-      }
-    ]
+    name: 'employment',
+    meta: { title: '就业数据统计', affix: true },
+    component: () => import('@/views/admin/employment/index.vue'),
   },
-
-  // 创新创业库
   {
     path: 'entrep',
-    meta: { title: '创新创业库' },
-    children: [
-      {
-        path: 'projects',
-        name: 'EntrepProjects',
-        meta: { title: '省级项目库' },
-        component: () => import('@/views/icon/index.vue'),
-      },
-      {
-        path: 'mentors',
-        name: 'EntrepMentors',
-        meta: { title: '创业导师资源' },
-        component: () => import('@/views/icon/index.vue'),
-      }
-    ]
+    name: 'EntrepProjects',
+    meta: { title: '创业项目库', affix: true },
+    component: () => import('@/views/admin/entrep/index.vue'),
+  },
+  {
+    path: 'jobAudit',
+    name: 'jobAudit',
+    meta: { title: '岗位审核', affix: true },
+    component: () => import('@/views/admin/jobAudit/index.vue'),
+  },
+  {
+    path: 'notice',
+    name: 'OpNotice',
+    meta: { title: '通知公告', affix: true },
+    component: () => import('@/views/admin/employment/index.vue'),
   },
 
-  // 内容运营
-  {
-    path: 'operation',
-    meta: { title: '内容运营' },
-    children: [
-      {
-        path: 'notice',
-        name: 'OpNotice',
-        meta: { title: '通知公告' },
-        component: () => import('@/views/icon/index.vue'),
-      },
-      {
-        path: 'policy',
-        name: 'OpPolicy',
-        meta: { title: '政策法规' },
-        component: () => import('@/views/icon/index.vue'),
-      }
-    ]
-  },
+
+  // // 就业监管中心
+  // {
+  //   path: 'employment',
+  //   meta: { title: '就业中心' },
+  //   children: [
+  //     {
+  //       path: 'stats',
+  //       name: 'EmpStats',
+  //       meta: { title: '就业数据统计' },
+  //       component: () => import('@/views/admin/employment/index.vue'),
+  //     },
+  //     {
+  //       path: 'verify',
+  //       name: 'EmpVerify',
+  //       meta: { title: '就业核查督导' },
+  //       component: () => import('@/views/icon/index.vue'),
+  //     }
+  //   ]
+  // },
+  //
+  // // 创新创业库
+  // {
+  //   path: 'entrep',
+  //   meta: { title: '创业中心' },
+  //   children: [
+  //     {
+  //       path: 'projects',
+  //       name: 'EntrepProjects',
+  //       meta: { title: '创业项目库' },
+  //       component: () => import('@/views/icon/index.vue'),
+  //     },
+  //     {
+  //       path: 'mentors',
+  //       name: 'EntrepMentors',
+  //       meta: { title: '创业导师资源' },
+  //       component: () => import('@/views/icon/index.vue'),
+  //     }
+  //   ]
+  // },
+
+  // // 内容运营
+  // {
+  //   path: 'operation',
+  //   meta: { title: '内容运营' },
+  //   children: [
+  //     {
+  //       path: 'notice',
+  //       name: 'OpNotice',
+  //       meta: { title: '通知公告' },
+  //       component: () => import('@/views/icon/index.vue'),
+  //     },
+  //     {
+  //       path: 'policy',
+  //       name: 'OpPolicy',
+  //       meta: { title: '政策法规' },
+  //       component: () => import('@/views/icon/index.vue'),
+  //     }
+  //   ]
+  // },
 
   // 【恢复】个人中心
   {

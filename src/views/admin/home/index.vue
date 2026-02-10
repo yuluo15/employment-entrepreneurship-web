@@ -19,7 +19,7 @@
       </div>
     </el-card>
 
-    <el-row :gutter="20" class="mb-4">
+    <el-row :gutter="20" class="mb-4" v-loading="loading">
       <el-col :xs="24" :sm="12" :md="6" v-for="(item, index) in statCards" :key="index">
         <el-card shadow="hover" class="stat-card mb-4" :body-style="{ padding: '20px' }">
           <div class="flex justify-between items-center">
@@ -31,76 +31,77 @@
               <el-icon :size="24" :color="item.iconColor"><component :is="item.icon" /></el-icon>
             </div>
           </div>
-          <div class="mt-3 text-xs text-gray-400 flex justify-between">
+          <div class="mt-3 text-xs text-gray-400">
             <span>{{ item.subTitle }}</span>
-            <span :class="item.isUp ? 'text-red-500' : 'text-green-500'" class="font-bold">
-              {{ item.isUp ? '+' : '' }}{{ item.growth }}%
-              <el-icon><component :is="item.isUp ? 'CaretTop' : 'CaretBottom'" /></el-icon>
-            </span>
           </div>
         </el-card>
       </el-col>
     </el-row>
 
     <el-row :gutter="20" class="mb-4">
-
       <el-col :xs="24" :lg="16" class="mb-4">
-        <el-card shadow="never" class="h-full">
+        <el-card shadow="never" class="h-full" v-loading="loading">
           <template #header>
             <div class="flex justify-between items-center">
-              <span class="font-bold">全平台业务趋势分析</span>
-              <el-radio-group v-model="chartTime" size="small">
-                <el-radio-button label="week">近7日</el-radio-button>
-                <el-radio-button label="month">近30日</el-radio-button>
-              </el-radio-group>
+              <span class="font-bold">各校学生数量排行</span>
             </div>
           </template>
-
-          <el-row :gutter="20">
-            <el-col :span="10">
-              <div class="chart-title">学生创业领域占比</div>
-              <div ref="pieChartRef" style="height: 300px;"></div>
-            </el-col>
-
-            <el-col :span="14">
-              <div class="chart-title">就业供需趋势 (简历 vs 岗位)</div>
-              <div ref="lineChartRef" style="height: 300px;"></div>
-            </el-col>
-          </el-row>
+          <div ref="schoolChartRef" style="height: 400px;"></div>
         </el-card>
       </el-col>
 
       <el-col :xs="24" :lg="8" class="mb-4">
-        <el-card shadow="never" class="h-full">
+        <el-card shadow="never" class="h-full" v-loading="loading">
           <template #header>
             <div class="flex justify-between items-center">
               <span class="font-bold">待处理审批</span>
-              <el-badge :value="todoList.length" type="danger" />
+              <el-badge :value="pendingCount" type="danger" v-if="pendingCount > 0" />
             </div>
           </template>
           <div class="todo-list">
-            <div v-for="(task, i) in todoList" :key="i" class="todo-item">
+            <div class="todo-item" v-if="pendingJobs > 0">
               <div class="flex items-start">
-                <el-tag :type="task.typeTag" size="small" class="mr-3 mt-0.5">{{ task.typeName }}</el-tag>
+                <el-tag type="warning" size="small" class="mr-3 mt-0.5">岗位审核</el-tag>
                 <div class="flex-1">
-                  <div class="text-sm font-medium text-gray-800 mb-1">{{ task.title }}</div>
-                  <div class="text-xs text-gray-400">{{ task.time }} · {{ task.submitter }}</div>
+                  <div class="text-sm font-medium text-gray-800 mb-1">待审核岗位</div>
+                  <div class="text-xs text-gray-400">共 {{ pendingJobs }} 个岗位待审核</div>
                 </div>
               </div>
-              <el-button link type="primary" size="small" @click="handleProcess(task)">处理</el-button>
+              <el-button link type="primary" size="small" @click="router.push('/admin/jobAudit')">处理</el-button>
             </div>
-            <div v-if="todoList.length === 0" class="text-center text-gray-400 py-10">
-              暂无待办事项
+            <div class="todo-item" v-if="pendingProjects > 0">
+              <div class="flex items-start">
+                <el-tag type="success" size="small" class="mr-3 mt-0.5">创业项目</el-tag>
+                <div class="flex-1">
+                  <div class="text-sm font-medium text-gray-800 mb-1">待审核创业项目</div>
+                  <div class="text-xs text-gray-400">共 {{ pendingProjects }} 个项目待审核</div>
+                </div>
+              </div>
+              <el-button link type="primary" size="small" @click="router.push('/admin/entrep')">处理</el-button>
             </div>
-          </div>
-          <div class="text-center mt-4 pt-4 border-t border-gray-100">
-            <el-button link type="info" size="small">查看全部消息</el-button>
+            <div v-if="pendingCount === 0" class="text-center text-gray-400 py-10">
+              <el-icon :size="48" class="mb-2"><CircleCheck /></el-icon>
+              <div>暂无待办事项</div>
+            </div>
           </div>
         </el-card>
       </el-col>
     </el-row>
 
-    <el-card shadow="never">
+    <el-row :gutter="20" class="mb-4">
+      <el-col :span="24">
+        <el-card shadow="never" v-loading="loading">
+          <template #header>
+            <div class="flex justify-between items-center">
+              <span class="font-bold">创业项目领域分布</span>
+            </div>
+          </template>
+          <div ref="domainChartRef" style="height: 300px;"></div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-card shadow="never" v-loading="loading">
       <template #header>
         <div class="flex justify-between items-center">
           <span class="font-bold">最新入驻企业一览</span>
@@ -108,12 +109,12 @@
         </div>
       </template>
       <el-table :data="latestCompanies" style="width: 100%" size="small">
-        <el-table-column prop="name" label="企业名称" min-width="200" />
+        <el-table-column prop="companyName" label="企业名称" min-width="200" />
         <el-table-column prop="industry" label="所属行业" width="150" />
-        <el-table-column prop="jobs" label="发布岗位" width="100" align="center">
-          <template #default="{ row }"><span class="text-blue-500 font-bold">{{ row.jobs }}</span></template>
+        <el-table-column prop="jobCount" label="发布岗位" width="100" align="center">
+          <template #default="{ row }"><span class="text-blue-500 font-bold">{{ row.jobCount }}</span></template>
         </el-table-column>
-        <el-table-column prop="date" label="入驻时间" width="180" align="right" />
+        <el-table-column prop="createTime" label="入驻时间" width="180" align="right" />
       </el-table>
     </el-card>
   </div>
@@ -124,139 +125,172 @@ import { ref, onMounted, nextTick, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import * as echarts from 'echarts'
 import {
-  DataBoard, School, OfficeBuilding, User,
-  CaretTop, CaretBottom, DocumentCopy
+  DataBoard, School, OfficeBuilding, User, UserFilled, CircleCheck
 } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
+import { getHomeOverview } from '@/api/home'
 
 const router = useRouter()
 const currentDate = computed(() => dayjs().format('YYYY年MM月DD日 dddd'))
-const chartTime = ref('week')
+const loading = ref(false)
 
-// --- 1. 核心指标数据 (业务导向) ---
-const statCards = [
+// --- 核心指标数据 ---
+const statCards = ref([
   {
     title: '入驻学校',
-    value: '12',
-    subTitle: '覆盖省份: 5',
-    growth: '4.5',
-    isUp: true,
+    value: 0,
+    subTitle: '覆盖全省高校',
     icon: School,
     bgColor: '#ecf5ff',
     iconColor: '#409eff'
   },
   {
     title: '入驻企业',
-    value: '843',
-    subTitle: '岗位充足度: 高',
-    growth: '12.0',
-    isUp: true,
+    value: 0,
+    subTitle: '提供就业岗位',
     icon: OfficeBuilding,
     bgColor: '#fdf6ec',
     iconColor: '#e6a23c'
   },
   {
     title: '学生总数',
-    value: '45,201',
-    subTitle: '就业率: 92%',
-    growth: '1.2',
-    isUp: false, // 模拟增长变缓
+    value: 0,
+    subTitle: '平台注册学生',
     icon: User,
     bgColor: '#f0f9eb',
     iconColor: '#67c23a'
   },
   {
-    title: '今日简历投递', // 【修改点】: 替换了 API 调用
-    value: '3,421',
-    subTitle: '较昨日',
-    growth: '24.1',
-    isUp: true,
-    icon: DocumentCopy,
-    bgColor: '#fef0f0',
-    iconColor: '#f56c6c'
+    title: '教师总数',
+    value: 0,
+    subTitle: '指导教师人数',
+    icon: UserFilled,
+    bgColor: '#f4f4f5',
+    iconColor: '#909399'
   },
-]
-
-// --- 2. 待办事项 (增加跳转处理) ---
-const todoList = ref([
-  { id: 1, title: '申请入驻：四川大学锦江学院', time: '10分钟前', submitter: '教务处', typeName: '学校', typeTag: 'primary', path: '/admin/system/schoolManage' },
-  { id: 2, title: '资质审核：成都高新科技有限公司', time: '1小时前', submitter: '企业HR', typeName: '企业', typeTag: 'warning', path: '/admin/system/companyManage' },
-  { id: 3, title: '创业扶持申请：无人机物流项目', time: '2小时前', submitter: '李同学', typeName: '创业', typeTag: 'success', path: '/admin/system/stuEntManage' },
 ])
 
-const handleProcess = (task: any) => {
-  console.log('跳转处理任务', task)
-  router.push(task.path)
+// --- 待办事项 ---
+const pendingJobs = ref(0)
+const pendingProjects = ref(0)
+const pendingCount = computed(() => pendingJobs.value + pendingProjects.value)
+
+// --- 学校排行数据 ---
+const schoolRankData = ref<any[]>([])
+
+// --- 创业领域分布 ---
+const domainData = ref<any[]>([])
+
+// --- 最新入驻企业 ---
+const latestCompanies = ref<any[]>([])
+
+// --- 图表引用 ---
+const schoolChartRef = ref()
+const domainChartRef = ref()
+let schoolChart: any = null
+let domainChart: any = null
+
+// --- 加载数据 ---
+const loadData = async () => {
+  loading.value = true
+  try {
+    const res = await getHomeOverview()
+    const data = res.data
+
+    // 更新KPI数据
+    statCards.value[0].value = data.schoolCount
+    statCards.value[1].value = data.companyCount
+    statCards.value[2].value = data.studentCount
+    statCards.value[3].value = data.teacherCount
+
+    // 更新待办数据
+    pendingJobs.value = data.pendingJobs
+    pendingProjects.value = data.pendingProjects
+
+    // 更新学校排行
+    schoolRankData.value = data.schoolRank || []
+
+    // 更新创业领域分布
+    domainData.value = data.domainDistribution || []
+
+    // 更新最新企业
+    latestCompanies.value = data.latestCompanies || []
+
+    // 重新渲染图表
+    nextTick(() => {
+      initCharts()
+    })
+  } catch (error) {
+    console.error('加载数据失败', error)
+    ElMessage.error('加载数据失败')
+  } finally {
+    loading.value = false
+  }
 }
 
-// --- 3. 底部表格数据 (最新入驻) ---
-const latestCompanies = [
-  { name: '字节跳动 (ByteDance)', industry: '互联网/IT', jobs: 120, date: '2025-12-29 10:00' },
-  { name: '华为技术有限公司', industry: '通信/硬件', jobs: 85, date: '2025-12-28 14:30' },
-  { name: '小米科技', industry: '智能家居', jobs: 45, date: '2025-12-27 09:15' },
-]
-
-// --- 4. 图表逻辑 (左右双图) ---
-const pieChartRef = ref()
-const lineChartRef = ref()
-let pieChart: any = null
-let lineChart: any = null
-
+// --- 初始化图表 ---
 const initCharts = () => {
-  // 左边：饼图 (创业领域)
-  if (pieChartRef.value) {
-    pieChart = echarts.init(pieChartRef.value)
-    pieChart.setOption({
-      tooltip: { trigger: 'item' },
-      legend: { bottom: '0%', left: 'center', itemWidth: 10, itemHeight: 10 },
-      color: ['#409eff', '#67c23a', '#e6a23c', '#f56c6c', '#909399'],
+  // 销毁旧图表
+  schoolChart?.dispose()
+  domainChart?.dispose()
+
+  // 1. 学校学生数量排行
+  if (schoolChartRef.value && schoolRankData.value.length > 0) {
+    schoolChart = echarts.init(schoolChartRef.value)
+    schoolChart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' }
+      },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: {
+        type: 'value'
+      },
+      yAxis: {
+        type: 'category',
+        data: schoolRankData.value.map(item => item.schoolName),
+        inverse: true
+      },
       series: [
         {
-          name: '创业领域',
-          type: 'pie',
-          radius: ['40%', '60%'],
-          center: ['50%', '40%'],
-          avoidLabelOverlap: false,
-          label: { show: false, position: 'center' },
-          emphasis: {
-            label: { show: true, fontSize: '14', fontWeight: 'bold' }
+          name: '学生数量',
+          type: 'bar',
+          data: schoolRankData.value.map(item => item.studentCount),
+          itemStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+              { offset: 0, color: '#3b82f6' },
+              { offset: 1, color: '#60a5fa' }
+            ]),
+            borderRadius: [0, 4, 4, 0]
           },
-          data: [
-            { value: 1048, name: '互联网+' },
-            { value: 735, name: '文化创意' },
-            { value: 580, name: '现代农业' },
-            { value: 484, name: '社会服务' },
-            { value: 300, name: '其他' }
-          ]
+          label: { show: true, position: 'right' }
         }
       ]
     })
   }
 
-  // 右边：折线图 (就业趋势)
-  if (lineChartRef.value) {
-    lineChart = echarts.init(lineChartRef.value)
-    lineChart.setOption({
-      tooltip: { trigger: 'axis' },
-      legend: { data: ['简历投递', '新增岗位'], top: 0 },
-      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-      xAxis: { type: 'category', boundaryGap: false, data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'] },
-      yAxis: { type: 'value' },
+  // 2. 创业项目领域分布
+  if (domainChartRef.value && domainData.value.length > 0) {
+    domainChart = echarts.init(domainChartRef.value)
+    domainChart.setOption({
+      tooltip: { trigger: 'item', formatter: '{b}: {c}个 ({d}%)' },
+      legend: { bottom: '5%', left: 'center' },
+      color: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'],
       series: [
         {
-          name: '简历投递',
-          type: 'line',
-          smooth: true,
-          data: [1200, 1320, 1010, 1340, 2900, 2300, 2100],
-          itemStyle: { color: '#409eff' },
-          areaStyle: { opacity: 0.1, color: '#409eff' }
-        },
-        {
-          name: '新增岗位',
-          type: 'line',
-          smooth: true,
-          data: [220, 182, 191, 234, 290, 330, 310],
-          itemStyle: { color: '#67c23a' } // 绿色代表企业
+          name: '创业领域',
+          type: 'pie',
+          radius: ['40%', '70%'],
+          center: ['50%', '45%'],
+          avoidLabelOverlap: false,
+          itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+          label: { show: true, formatter: '{b}\n{d}%' },
+          emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold' } },
+          data: domainData.value.map(item => ({
+            name: item.domainLabel,
+            value: item.count
+          }))
         }
       ]
     })
@@ -264,21 +298,19 @@ const initCharts = () => {
 }
 
 const resizeCharts = () => {
-  pieChart?.resize()
-  lineChart?.resize()
+  schoolChart?.resize()
+  domainChart?.resize()
 }
 
 onMounted(() => {
-  nextTick(() => {
-    initCharts()
-    window.addEventListener('resize', resizeCharts)
-  })
+  loadData()
+  window.addEventListener('resize', resizeCharts)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', resizeCharts)
-  pieChart?.dispose()
-  lineChart?.dispose()
+  schoolChart?.dispose()
+  domainChart?.dispose()
 })
 </script>
 
