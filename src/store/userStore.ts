@@ -37,6 +37,10 @@ export const useUserStore = defineStore('user', () => {
             localStorage.setItem('role', data.role)
             localStorage.setItem('userInfo', JSON.stringify(data))
 
+            // 登录成功后重置标签页，使用当前用户角色
+            const tabStore = useTabStore()
+            tabStore.reset(data.role as any)
+
             return data
         } catch (error) {
             throw error

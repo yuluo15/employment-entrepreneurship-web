@@ -43,14 +43,23 @@ import { APP_TAG_HEIGHT } from '@/constants'
 import useTabStore, { getInitTabs, type TabView } from '@/store/tabs'
 // import { watch, onMounted, onBeforeUnmount, reactive } from 'vue' // 确保引入 watch
 import bus from '@/utils/bus'
-import { DEFAULT_HOME_PATH } from '@/router/menu'
+import { ROLE_BASE_PATH } from '@/router/menu'
 import { CircleCloseFilled, Close, RefreshRight, SwitchButton } from '@element-plus/icons-vue'
+import { useUserStore } from '@/store/userStore'
 
 defineOptions({ name: 'TagView' })
 const store = useTabStore()
+const userStore = useUserStore()
 const { tabs } = storeToRefs(store)
 const router = useRouter()
 const route = useRoute()
+
+// 根据当前用户角色获取首页路径
+const getHomePath = () => {
+  const role = userStore.role || 'admin'
+  return `${ROLE_BASE_PATH[role as keyof typeof ROLE_BASE_PATH]}/home`
+}
+
 // bus.on('ROUTE_CHANGE', route => {
 //   store.add(route)
 // })
@@ -67,14 +76,36 @@ const onRemove = path => {
   store.remove(path)
 }
 const closeAll = () => {
-  tabs.value = getInitTabs()
-  router.push(DEFAULT_HOME_PATH)
+  const role = userStore.role || 'admin'
+  // 只保留 affix 的标签（固定标签）
+  tabs.value = tabs.value.filter(tab => tab.meta?.affix)
+  // 如果没有固定标签，则重新初始化
+  if (tabs.value.length === 0) {
+    tabs.value = getInitTabs(role as any)
+  }
+  // 跳转到第一个固定标签（通常是首页）
+  const affixTab = tabs.value.find(tab => tab.meta?.affix)
+  if (affixTab) {
+    router.push(affixTab.fullPath)
+  } else {
+    router.push(getHomePath())
+  }
 }
 const closeOther = tab => {
-  if (tab.meta?.affix) return closeAll()
+  // 如果点击的是固定标签，则关闭所有非固定标签
+  if (tab.meta?.affix) {
+    tabs.value = tabs.value.filter(e => e.meta?.affix)
+    router.push(tab.fullPath)
+    return
+  }
+  
+  // 保留固定标签和当前点击的标签
   tabs.value = tabs.value.filter(e => e.meta?.affix || [e.path, e.fullPath].includes(tab.fullPath))
-  if (tab.meta?.affix || tab.fullPath === route.fullPath) return
-  router.push(DEFAULT_HOME_PATH)
+  
+  // 如果当前路由不是点击的标签，则跳转到点击的标签
+  if (tab.fullPath !== route.fullPath) {
+    router.push(tab.fullPath)
+  }
 }
 const refreshTab = (tab: TabView) => {
   router.push({ name: 'Redirect', query: tab.query, params: { path: tab.fullPath } })

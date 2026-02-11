@@ -90,26 +90,26 @@ const adminMenu: RouteRecordRaw[] = [
   {
     path: 'employment',
     name: 'employment',
-    meta: { title: '就业数据统计', affix: true },
+    meta: { title: '就业数据统计' },
     component: () => import('@/views/admin/employment/index.vue'),
   },
   {
     path: 'entrep',
     name: 'EntrepProjects',
-    meta: { title: '创业项目库', affix: true },
+    meta: { title: '创业项目库' },
     component: () => import('@/views/admin/entrep/index.vue'),
   },
   {
     path: 'jobAudit',
     name: 'jobAudit',
-    meta: { title: '岗位审核', affix: true },
+    meta: { title: '岗位审核' },
     component: () => import('@/views/admin/jobAudit/index.vue'),
   },
   {
     path: 'notice',
     name: 'OpNotice',
-    meta: { title: '通知公告', affix: true },
-    component: () => import('@/views/admin/employment/index.vue'),
+    meta: { title: '通知公告' },
+    component: () => import('@/views/admin/notice/index.vue'),
   },
 
 
@@ -182,13 +182,13 @@ const adminMenu: RouteRecordRaw[] = [
         path: 'profile',
         name: 'AdminProfile',
         meta: { title: '基本信息' },
-        component: () => import('@/views/icon/index.vue'), // 后续替换为真实页面
+        component: () => import('@/views/admin/person/info.vue'), // 后续替换为真实页面
       },
       {
         path: 'password',
-        name: 'ChangePassword',
+        name: 'AdminChangePassword',
         meta: { title: '修改密码' },
-        component: () => import('@/views/icon/index.vue'),
+        component: () => import('@/views/admin/person/password.vue'),
       }
     ]
   }
@@ -343,8 +343,74 @@ const studentMenu: RouteRecordRaw[] = [
     component: () => import('@/views/mobile/settings/password.vue')
   }
 ]
+// --- 企业端菜单 ---
 const companyMenu: RouteRecordRaw[] = [
-  { path: 'home', name: 'CompanyHome', meta: { title: '企业首页', icon: House }, component: () => import('@/views/admin/home/index.vue') }
+  {
+    path: 'home',
+    name: 'CompDashboard',
+    meta: { title: '企业工作台', affix: true },
+    component: () => import('@/views/company/home/index.vue'),
+  },
+  {
+    path: 'position',
+    meta: { title: '职位管理' },
+    children: [
+      {
+        path: 'post',
+        name: 'CompPostJob',
+        meta: { title: '发布新职位' },
+        component: () => import('@/views/company/position/post.vue'),
+      },
+      {
+        path: 'manage',
+        name: 'CompJobManage',
+        meta: { title: '职位列表' },
+        component: () => import('@/views/company/position/list.vue'),
+      }
+    ]
+  },
+  {
+    path: 'recruitment',
+    meta: { title: '简历处理' },
+    children: [
+      {
+        path: 'pending',
+        name: 'CompResumePending',
+        meta: { title: '待处理简历' },
+        component: () => import('@/views/company/recruitment/new-resumes.vue'),
+      },
+      {
+        path: 'interview',
+        name: 'CompInterview',
+        meta: { title: '面试安排' },
+        component: () => import('@/views/company/recruitment/interview.vue'),
+      }
+    ]
+  },
+  {
+    path: 'profile',
+    name: 'CompProfile',
+    meta: { title: '企业信息' },
+    component: () => import('@/views/company/profile/info.vue'),
+  },
+  {
+    path: 'person',
+    meta: { title: '个人中心' },
+    children: [
+      {
+        path: 'profile',
+        name: 'AdminProfile',
+        meta: { title: '基本信息' },
+        component: () => import('@/views/admin/person/info.vue'), // 后续替换为真实页面
+      },
+      {
+        path: 'password',
+        name: 'AdminChangePassword',
+        meta: { title: '修改密码' },
+        component: () => import('@/views/admin/person/password.vue'),
+      }
+    ]
+  }
 ]
 const schoolMenu: RouteRecordRaw[] = [
   { path: 'home', name: 'SchoolHome', meta: { title: '教务首页', icon: House }, component: () => import('@/views/admin/home/index.vue') }
