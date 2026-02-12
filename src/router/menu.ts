@@ -353,37 +353,46 @@ const companyMenu: RouteRecordRaw[] = [
   },
   {
     path: 'position',
+    name: 'Position',
     meta: { title: '职位管理' },
-    children: [
-      {
-        path: 'post',
-        name: 'CompPostJob',
-        meta: { title: '发布新职位' },
-        component: () => import('@/views/company/position/post.vue'),
-      },
-      {
-        path: 'manage',
-        name: 'CompJobManage',
-        meta: { title: '职位列表' },
-        component: () => import('@/views/company/position/list.vue'),
-      }
-    ]
+    component: () => import('@/views/company/position/list.vue'),
+    // children: [
+    //   {
+    //     path: 'post',
+    //     name: 'CompPostJob',
+    //     meta: { title: '发布新职位' },
+    //     component: () => import('@/views/company/position/post.vue'),
+    //   },
+    //   {
+    //     path: 'manage',
+    //     name: 'CompJobManage',
+    //     meta: { title: '职位列表' },
+    //     component: () => import('@/views/company/position/list.vue'),
+    //   }
+    // ]
   },
   {
     path: 'recruitment',
-    meta: { title: '简历处理' },
+    meta: { title: '招聘管理', icon: 'Document' }, // 建议改个图标
     children: [
       {
         path: 'pending',
         name: 'CompResumePending',
-        meta: { title: '待处理简历' },
+        meta: { title: '新简历' }, // status = 'DELIVERED'
         component: () => import('@/views/company/recruitment/new-resumes.vue'),
       },
       {
         path: 'interview',
         name: 'CompInterview',
-        meta: { title: '面试安排' },
+        meta: { title: '面试日程' }, // status = 'INTERVIEW'
         component: () => import('@/views/company/recruitment/interview.vue'),
+      },
+      // ✅【补上这个】人才库/已录用
+      {
+        path: 'talent-pool',
+        name: 'CompTalentPool',
+        meta: { title: '录用/归档' }, // status = 'OFFER' 或 'REJECT'
+        component: () => import('@/views/company/recruitment/talent-pool.vue'),
       }
     ]
   },
@@ -412,8 +421,122 @@ const companyMenu: RouteRecordRaw[] = [
     ]
   }
 ]
+// --- 学校端菜单 ---
 const schoolMenu: RouteRecordRaw[] = [
-  { path: 'home', name: 'SchoolHome', meta: { title: '教务首页', icon: House }, component: () => import('@/views/admin/home/index.vue') }
+  {
+    path: 'home',
+    name: 'SchoolHome',
+    meta: { title: '学校工作台', affix: true },
+    component: () => import('@/views/school/home/index.vue'),
+  },
+
+  // 学生管理
+  {
+    path: 'student',
+    meta: { title: '学生管理' },
+    children: [
+      {
+        path: 'list',
+        name: 'SchoolStudentList',
+        meta: { title: '学生档案' },
+        component: () => import('@/views/school/student/list.vue'),
+      },
+      {
+        path: 'employment',
+        name: 'SchoolStudentEmployment',
+        meta: { title: '就业情况' },
+        component: () => import('@/views/school/student/employment.vue'),
+      }
+    ]
+  },
+
+  // 教师管理
+  {
+    path: 'teacher',
+    meta: { title: '教师管理' },
+    children: [
+      {
+        path: 'list',
+        name: 'SchoolTeacherList',
+        meta: { title: '教师档案' },
+        component: () => import('@/views/school/teacher/list.vue'),
+      },
+      {
+        path: 'guidance',
+        name: 'SchoolTeacherGuidance',
+        meta: { title: '指导记录' },
+        component: () => import('@/views/school/teacher/guidance.vue'),
+      }
+    ]
+  },
+
+  // 创业项目
+  {
+    path: 'project',
+    meta: { title: '创业项目' },
+    children: [
+      {
+        path: 'list',
+        name: 'SchoolProjectList',
+        meta: { title: '项目管理' },
+        component: () => import('@/views/school/project/list.vue'),
+      },
+      {
+        path: 'review',
+        name: 'SchoolProjectReview',
+        meta: { title: '项目评审' },
+        component: () => import('@/views/school/project/review.vue'),
+      }
+    ]
+  },
+
+  // 数据统计
+  {
+    path: 'statistics',
+    meta: { title: '数据统计' },
+    children: [
+      {
+        path: 'employment',
+        name: 'SchoolStatsEmployment',
+        meta: { title: '就业统计' },
+        component: () => import('@/views/school/statistics/employment.vue'),
+      },
+      {
+        path: 'entrepreneurship',
+        name: 'SchoolStatsEntrep',
+        meta: { title: '创业统计' },
+        component: () => import('@/views/school/statistics/entrepreneurship.vue'),
+      }
+    ]
+  },
+
+  // 通知公告
+  {
+    path: 'notice',
+    name: 'SchoolNotice',
+    meta: { title: '通知公告' },
+    component: () => import('@/views/school/notice/index.vue'),
+  },
+
+  // 个人中心
+  {
+    path: 'person',
+    meta: { title: '个人中心' },
+    children: [
+      {
+        path: 'profile',
+        name: 'SchoolProfile',
+        meta: { title: '基本信息' },
+        component: () => import('@/views/admin/person/info.vue'),
+      },
+      {
+        path: 'password',
+        name: 'SchoolChangePassword',
+        meta: { title: '修改密码' },
+        component: () => import('@/views/admin/person/password.vue'),
+      }
+    ]
+  }
 ]
 
 export const roleMenus: Record<UserRole, RouteRecordRaw[]> = {

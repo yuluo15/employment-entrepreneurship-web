@@ -3,6 +3,20 @@
     <!-- 搜索栏 -->
     <el-card shadow="never" class="mb-4">
       <el-form :inline="true" :model="queryParams">
+        <el-form-item label="学生姓名">
+          <el-input 
+            v-model="queryParams.studentName" 
+            placeholder="请输入学生姓名" 
+            clearable 
+            style="width: 200px" 
+          />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 150px">
+            <el-option label="已录用" value="OFFER" />
+            <el-option label="已拒绝" value="REJECTED" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="职位名称">
           <el-select 
             v-model="queryParams.jobId" 
@@ -19,25 +33,6 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="学生姓名">
-          <el-input 
-            v-model="queryParams.studentName" 
-            placeholder="请输入学生姓名" 
-            clearable 
-            style="width: 200px" 
-          />
-        </el-form-item>
-        <el-form-item label="投递时间">
-          <el-date-picker
-            v-model="dateRange"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            style="width: 240px"
-          />
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" :icon="Search" @click="handleQuery">搜索</el-button>
           <el-button :icon="Refresh" @click="handleReset">重置</el-button>
@@ -45,31 +40,79 @@
       </el-form>
     </el-card>
 
+    <!-- 统计卡片 -->
+    <el-row :gutter="20" class="mb-4">
+      <el-col :span="8">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon offer-icon">
+              <el-icon><UserFilled /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ statistics.offerCount }}</div>
+              <div class="stat-label">已录用</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="8">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon rejected-icon">
+              <el-icon><CircleClose /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ statistics.rejectedCount }}</div>
+              <div class="stat-label">已拒绝</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="8">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon total-icon">
+              <el-icon><DataLine /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ statistics.totalCount }}</div>
+              <div class="stat-label">总计</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <!-- 列表 -->
     <el-card shadow="never">
-      <el-table v-loading="loading" :data="deliveryList" style="width: 100%">
+      <el-table v-loading="loading" :data="talentList" style="width: 100%">
         <el-table-column prop="studentName" label="学生姓名" width="120" />
         <el-table-column prop="studentPhone" label="联系电话" width="130" />
+        <el-table-column prop="email" label="邮箱" width="180" show-overflow-tooltip />
         <el-table-column prop="jobName" label="应聘职位" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="education" label="学历" width="100" align="center">
-          <template #default="{ row }">
-            {{ getEducationLabel(row.education) }}
-          </template>
-        </el-table-column>
         <el-table-column prop="school" label="学校" width="150" show-overflow-tooltip />
         <el-table-column prop="major" label="专业" width="150" show-overflow-tooltip />
-        <el-table-column prop="graduationYear" label="毕业年份" width="100" align="center" />
-        <el-table-column prop="deliveryTime" label="投递时间" width="180" align="center" />
-        <el-table-column label="操作" width="280" align="center" fixed="right">
+        <el-table-column prop="status" label="状态" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 'OFFER' ? 'success' : 'info'" size="small">
+              {{ row.status === 'OFFER' ? '已录用' : '已拒绝' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="updateTime" label="更新时间" width="180" align="center" />
+        <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="handleViewResume(row)">
               查看简历
             </el-button>
-            <el-button link type="success" size="small" @click="handleArrangeInterview(row)">
-              安排面试
-            </el-button>
-            <el-button link type="danger" size="small" @click="handleReject(row)">
-              不合适
+            <el-button 
+              v-if="row.status === 'REJECTED'" 
+              link 
+              type="success" 
+              size="small" 
+              @click="handleOffer(row)"
+            >
+              发放Offer
             </el-button>
           </template>
         </el-table-column>
@@ -156,62 +199,37 @@
       </div>
     </el-dialog>
 
-    <!-- 安排面试对话框 -->
+    <!-- 发放Offer对话框 -->
     <el-dialog 
-      v-model="interviewDialogVisible" 
-      title="安排面试" 
+      v-model="offerDialogVisible" 
+      title="发放Offer" 
       width="600px"
       :close-on-click-modal="false"
     >
       <el-form
-        ref="interviewFormRef"
-        :model="interviewForm"
-        :rules="interviewRules"
+        ref="offerFormRef"
+        :model="offerForm"
+        :rules="offerRules"
         label-width="100px"
       >
-        <el-form-item label="面试时间" prop="interviewTime">
+        <el-form-item label="入职时间" prop="entryDate">
           <el-date-picker
-            v-model="interviewForm.interviewTime"
-            type="datetime"
-            placeholder="选择面试时间"
-            value-format="YYYY-MM-DD HH:mm:ss"
+            v-model="offerForm.entryDate"
+            type="date"
+            placeholder="选择入职时间"
+            value-format="YYYY-MM-DD"
             style="width: 100%"
           />
         </el-form-item>
-        <el-form-item label="面试时长" prop="duration">
-          <el-input-number 
-            v-model="interviewForm.duration" 
-            :min="15" 
-            :max="240" 
-            :step="15"
-            style="width: 100%"
-          />
-          <span class="ml-2 text-gray-500">分钟</span>
-        </el-form-item>
-        <el-form-item label="面试方式" prop="type">
-          <el-select v-model="interviewForm.type" placeholder="请选择面试方式" style="width: 100%">
-            <el-option label="现场面试" value="ONSITE" />
-            <el-option label="视频面试" value="VIDEO" />
-            <el-option label="电话面试" value="PHONE" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="面试地点" prop="location" v-if="interviewForm.type === 'ONSITE'">
+        <el-form-item label="薪资待遇" prop="salary">
           <el-input 
-            v-model="interviewForm.location" 
-            type="textarea"
-            :rows="2"
-            placeholder="请输入面试地点"
-          />
-        </el-form-item>
-        <el-form-item label="面试链接" prop="location" v-if="interviewForm.type === 'VIDEO'">
-          <el-input 
-            v-model="interviewForm.location" 
-            placeholder="请输入视频会议链接"
+            v-model="offerForm.salary" 
+            placeholder="请输入薪资待遇，如：8000-10000"
           />
         </el-form-item>
         <el-form-item label="备注">
           <el-input 
-            v-model="interviewForm.notes" 
+            v-model="offerForm.notes" 
             type="textarea"
             :rows="3"
             placeholder="请输入备注信息（选填）"
@@ -220,8 +238,8 @@
       </el-form>
 
       <template #footer>
-        <el-button @click="interviewDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleConfirmInterview" :loading="submitting">
+        <el-button @click="offerDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleConfirmOffer" :loading="submitting">
           确定
         </el-button>
       </template>
@@ -231,35 +249,42 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
-import { Search, Refresh } from '@element-plus/icons-vue'
+import { ElMessage, FormInstance } from 'element-plus'
+import { Search, Refresh, UserFilled, CircleClose, DataLine } from '@element-plus/icons-vue'
 import {
-  getDeliveryList,
+  getTalentPoolList,
+  getTalentStatistics,
+  sendOffer,
   getResumeDetail,
-  arrangeInterview,
-  rejectDelivery,
   getCompanyJobs,
-  type DeliveryQuery,
-  type DeliveryItem,
+  type TalentQuery,
+  type TalentItem,
+  type TalentStatistics,
+  type OfferForm,
   type ResumeDetail,
-  type InterviewForm,
   type JobOption
 } from '@/api/recruitment'
 
 // 查询参数
-const queryParams = reactive<DeliveryQuery>({
+const queryParams = reactive<TalentQuery>({
   pageNum: 1,
   pageSize: 10,
-  jobId: '',
-  studentName: ''
+  studentName: '',
+  status: '',
+  jobId: ''
 })
-
-const dateRange = ref<string[]>([])
 
 // 列表数据
 const loading = ref(false)
-const deliveryList = ref<DeliveryItem[]>([])
+const talentList = ref<TalentItem[]>([])
 const total = ref(0)
+
+// 统计数据
+const statistics = ref<TalentStatistics>({
+  offerCount: 0,
+  rejectedCount: 0,
+  totalCount: 0
+})
 
 // 职位选项
 const jobOptions = ref<JobOption[]>([])
@@ -268,31 +293,23 @@ const jobOptions = ref<JobOption[]>([])
 const resumeDialogVisible = ref(false)
 const currentResume = ref<ResumeDetail | null>(null)
 
-// 面试安排
-const interviewDialogVisible = ref(false)
-const interviewFormRef = ref<FormInstance>()
+// 发放Offer
+const offerDialogVisible = ref(false)
+const offerFormRef = ref<FormInstance>()
 const submitting = ref(false)
-const interviewForm = reactive<InterviewForm>({
+const offerForm = reactive<OfferForm>({
   deliveryId: '',
-  interviewTime: '',
-  duration: 60,
-  type: 'ONSITE',
-  location: '',
+  entryDate: '',
+  salary: '',
   notes: ''
 })
 
-const interviewRules = {
-  interviewTime: [
-    { required: true, message: '请选择面试时间', trigger: 'change' }
+const offerRules = {
+  entryDate: [
+    { required: true, message: '请选择入职时间', trigger: 'change' }
   ],
-  duration: [
-    { required: true, message: '请输入面试时长', trigger: 'blur' }
-  ],
-  type: [
-    { required: true, message: '请选择面试方式', trigger: 'change' }
-  ],
-  location: [
-    { required: true, message: '请输入面试地点或链接', trigger: 'blur' }
+  salary: [
+    { required: true, message: '请输入薪资待遇', trigger: 'blur' }
   ]
 }
 
@@ -306,21 +323,22 @@ const loadJobOptions = async () => {
   }
 }
 
-// 加载投递列表
+// 加载统计数据
+const loadStatistics = async () => {
+  try {
+    const res = await getTalentStatistics()
+    statistics.value = res.data
+  } catch (error) {
+    console.error('加载统计数据失败', error)
+  }
+}
+
+// 加载列表
 const loadList = async () => {
   loading.value = true
   try {
-    // 处理日期范围
-    if (dateRange.value && dateRange.value.length === 2) {
-      queryParams.startDate = dateRange.value[0]
-      queryParams.endDate = dateRange.value[1]
-    } else {
-      queryParams.startDate = undefined
-      queryParams.endDate = undefined
-    }
-
-    const res = await getDeliveryList(queryParams)
-    deliveryList.value = res.data.data || []
+    const res = await getTalentPoolList(queryParams)
+    talentList.value = res.data.data || []
     total.value = res.data.total
   } catch (error) {
     console.error('加载列表失败', error)
@@ -338,14 +356,14 @@ const handleQuery = () => {
 
 // 重置
 const handleReset = () => {
-  queryParams.jobId = ''
   queryParams.studentName = ''
-  dateRange.value = []
+  queryParams.status = ''
+  queryParams.jobId = ''
   handleQuery()
 }
 
 // 查看简历
-const handleViewResume = async (row: DeliveryItem) => {
+const handleViewResume = async (row: TalentItem) => {
   try {
     const res = await getResumeDetail(row.resumeId)
     currentResume.value = res.data
@@ -356,58 +374,36 @@ const handleViewResume = async (row: DeliveryItem) => {
   }
 }
 
-// 安排面试
-const handleArrangeInterview = (row: DeliveryItem) => {
-  interviewForm.deliveryId = row.id
-  interviewForm.interviewTime = ''
-  interviewForm.duration = 60
-  interviewForm.type = 'ONSITE'
-  interviewForm.location = ''
-  interviewForm.notes = ''
-  interviewDialogVisible.value = true
+// 发放Offer
+const handleOffer = (row: TalentItem) => {
+  offerForm.deliveryId = row.id
+  offerForm.entryDate = ''
+  offerForm.salary = ''
+  offerForm.notes = ''
+  offerDialogVisible.value = true
 }
 
-// 确认安排面试
-const handleConfirmInterview = async () => {
-  if (!interviewFormRef.value) return
+// 确认发放Offer
+const handleConfirmOffer = async () => {
+  if (!offerFormRef.value) return
   
-  await interviewFormRef.value.validate(async (valid) => {
+  await offerFormRef.value.validate(async (valid) => {
     if (!valid) return
     
     submitting.value = true
     try {
-      await arrangeInterview(interviewForm)
-      ElMessage.success('面试安排成功，已通知学生')
-      interviewDialogVisible.value = false
+      await sendOffer(offerForm)
+      ElMessage.success('Offer发放成功，已通知学生')
+      offerDialogVisible.value = false
       loadList()
+      loadStatistics()
     } catch (error) {
-      console.error('安排面试失败', error)
-      ElMessage.error('安排面试失败')
+      console.error('操作失败', error)
+      ElMessage.error('操作失败')
     } finally {
       submitting.value = false
     }
   })
-}
-
-// 拒绝
-const handleReject = async (row: DeliveryItem) => {
-  try {
-    const result = await ElMessageBox.prompt('请输入拒绝原因（选填）', '确认拒绝', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputType: 'textarea',
-      inputPlaceholder: '请输入拒绝原因'
-    })
-    
-    await rejectDelivery(row.id, result.value)
-    ElMessage.success('操作成功')
-    loadList()
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('操作失败', error)
-      ElMessage.error('操作失败')
-    }
-  }
 }
 
 // 工具函数
@@ -423,6 +419,7 @@ const getEducationLabel = (education: string) => {
 
 onMounted(() => {
   loadJobOptions()
+  loadStatistics()
   loadList()
 })
 </script>
@@ -432,6 +429,57 @@ onMounted(() => {
   padding: 20px;
   background-color: #f5f7fa;
   min-height: calc(100vh - 84px);
+}
+
+.stat-card {
+  .stat-content {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-right: 20px;
+
+      &.offer-icon {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      &.rejected-icon {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+      }
+
+      &.total-icon {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+      }
+    }
+
+    .stat-info {
+      flex: 1;
+
+      .stat-value {
+        font-size: 28px;
+        font-weight: bold;
+        color: #303133;
+        line-height: 1.2;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        color: #909399;
+        margin-top: 4px;
+      }
+    }
+  }
 }
 
 .resume-detail {
