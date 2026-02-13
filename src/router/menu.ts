@@ -478,14 +478,8 @@ const schoolMenu: RouteRecordRaw[] = [
       {
         path: 'list',
         name: 'SchoolProjectList',
-        meta: { title: '项目管理' },
+        meta: { title: '项目管理', affix: true },
         component: () => import('@/views/school/project/list.vue'),
-      },
-      {
-        path: 'review',
-        name: 'SchoolProjectReview',
-        meta: { title: '项目评审' },
-        component: () => import('@/views/school/project/review.vue'),
       }
     ]
   },
