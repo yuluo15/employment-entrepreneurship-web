@@ -28,16 +28,43 @@
       </van-swipe>
     </div>
 
-    <div class="mt-3 bg-white mx-3 rounded-lg p-2 shadow-sm">
-      <div class="text-sm font-bold px-2 mb-1 text-gray-800 flex items-center">
-        <van-icon name="fire" color="#ee0a24" class="mr-1" /> 创业直通车
+    <div class="mt-3 bg-white mx-3 rounded-lg p-3 shadow-sm">
+      <div class="flex justify-between items-center mb-2">
+        <div class="text-sm font-bold text-gray-800 flex items-center">
+          <van-icon name="bell" color="#3b82f6" class="mr-1" /> 通知公告
+        </div>
+        <span class="text-xs text-gray-400 flex items-center" @click="toNoticeList">
+          更多 <van-icon name="arrow" />
+        </span>
       </div>
-      <van-grid :border="false" :column-num="4">
-        <van-grid-item icon="manager-o" text="找导师" to="/student/entrepreneurship?tab=mentor" />
-        <van-grid-item icon="gold-coin-o" text="找资金" to="/student/entrepreneurship?tab=fund" />
-        <van-grid-item icon="shop-o" text="创客空间" to="/student/entrepreneurship?tab=space" />
-        <van-grid-item icon="newspaper-o" text="政策扶持" to="/student/entrepreneurship?tab=policy" />
-      </van-grid>
+      
+      <div v-if="notices.length > 0" class="space-y-2">
+        <div
+          v-for="notice in notices"
+          :key="notice.noticeId"
+          class="flex items-start gap-2 p-2 rounded active:bg-gray-50 transition-colors"
+          @click="toNoticeDetail(notice.noticeId)"
+        >
+          <van-tag :type="getNoticeTagType(notice.noticeType)" size="small" class="shrink-0 mt-0.5">
+            {{ notice.noticeTypeText }}
+          </van-tag>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-gray-800 line-clamp-1 mb-1 flex items-center gap-1">
+              <van-icon v-if="notice.isTop" name="fire" color="#ee0a24" size="12" />
+              {{ notice.noticeTitle }}
+            </div>
+            <div class="text-xs text-gray-400 flex items-center justify-between">
+              <span>{{ notice.publisherName }}</span>
+              <span class="flex items-center gap-1">
+                <van-icon name="eye-o" size="10" />
+                {{ notice.viewCount }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <van-empty v-else description="暂无通知" image-size="60" />
     </div>
 
     <div class="mt-3 px-3">
@@ -102,9 +129,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onActivated } from 'vue'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { searchApi, type SearchResultVo } from '@/api/mobile/job'
+import { getHomeNotices } from '@/api/mobile/notice'
+
 defineOptions({ name: 'StudentHome' })
 
 const router = useRouter()
@@ -119,6 +148,10 @@ const loading = ref(false)
 const finished = ref(false)
 const jobList = ref<SearchResultVo[]>([])
 const pageNum = ref(1)
+
+// 通知公告
+const notices = ref<any[]>([])
+
 // 2. 同样的滚动条保持逻辑 (首页通常也需要)
 const scrollTop = ref(0)
 
@@ -134,9 +167,42 @@ onActivated(() => {
 })
 
 onMounted(() => {
-  // 如果这里不调用，第一次进来列表是空的
+  // 加载职位列表和通知公告
   onLoad()
+  loadNotices()
 })
+
+// 加载通知公告
+const loadNotices = async () => {
+  try {
+    const res = await getHomeNotices()
+    notices.value = res.data || []
+  } catch (error) {
+    console.error('加载通知失败', error)
+  }
+}
+
+// 获取通知类型标签颜色
+const getNoticeTagType = (type: string) => {
+  const map: Record<string, string> = {
+    'ACTIVITY': 'primary',
+    'COMPETITION': 'warning',
+    'LECTURE': 'success',
+    'POLICY': 'danger',
+    'GENERAL': 'default'
+  }
+  return map[type] || 'default'
+}
+
+// 跳转通知列表
+const toNoticeList = () => {
+  router.push('/student/notices')
+}
+
+// 跳转通知详情
+const toNoticeDetail = (noticeId: string) => {
+  router.push(`/student/notice/${noticeId}`)
+}
 
 const onLoad = async () => {
   try {

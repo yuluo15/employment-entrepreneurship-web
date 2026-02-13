@@ -5,6 +5,7 @@ import Redirect from '@/views/redirect.vue'
 import Login from '@/views/login/index.vue'
 import setupRouterGuard from './guard'
 import MobileLayout from '@/layout/mobile/index.vue'
+import TeacherLayout from '@/layout/teacher/index.vue'
 
 import {
   DEFAULT_HOME_PATH,
@@ -19,7 +20,8 @@ const layoutMap: Record<UserRole, any> = {
   admin: Layout,
   school: Layout,
   company: Layout,
-  student: MobileLayout // 学生端使用移动布局
+  student: MobileLayout, // 学生端使用移动布局
+  teacher: TeacherLayout // 教师端使用移动布局
 }
 
 const createRoleRoutes = (): RouteRecordRaw[] =>

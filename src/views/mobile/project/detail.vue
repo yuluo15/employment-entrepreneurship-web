@@ -92,21 +92,52 @@
       />
 
       <van-action-bar-button
-          color="#7c3aed"
+          :color="buttonConfig.color"
           type="primary"
-          text="申请加入项目"
+          :text="buttonConfig.text"
+          :disabled="buttonConfig.disabled"
           @click="handleJoin"
       />
     </van-action-bar>
+
+    <!-- 申请对话框 -->
+    <van-dialog
+      v-model:show="showApplyDialog"
+      title="申请加入项目"
+      show-cancel-button
+      :before-close="handleApply"
+    >
+      <div class="p-4">
+        <van-field
+          v-model="applyForm.applicationReason"
+          rows="5"
+          autosize
+          type="textarea"
+          maxlength="500"
+          placeholder="请说明您的申请理由（至少20字）"
+          show-word-limit
+          class="mb-3"
+        />
+        <van-field
+          v-model="applyForm.skills"
+          rows="3"
+          autosize
+          type="textarea"
+          maxlength="200"
+          placeholder="请简述您的技能特长（选填）"
+          show-word-limit
+        />
+      </div>
+    </van-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 // ... (script 保持不变)
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { getProjectDetail, type ProjectDetailVo } from '@/api/mobile/project'
-import { showToast } from 'vant'
+import { getProjectDetail, type ProjectDetailVo, applyToJoinProject } from '@/api/mobile/project'
+import { showToast, showLoadingToast, closeToast, showDialog } from 'vant'
 import { toggleCollection } from '@/api/mobile/interaction' // [新增]
 
 const route = useRoute()
@@ -114,6 +145,13 @@ const detail = ref<Partial<ProjectDetailVo>>({})
 const loading = ref(true)
 
 const isCollected = ref(false) // [新增] 收藏状态
+
+// 申请对话框
+const showApplyDialog = ref(false)
+const applyForm = ref({
+  applicationReason: '',
+  skills: ''
+})
 
 onMounted(async () => {
   loading.value = true
@@ -144,10 +182,110 @@ const handleCollect = async () => {
 }
 
 const contactLeader = () => {
-  showToast('已向负责人发送招呼')
+  if (!detail.value.leaderPhone) {
+    showToast('负责人未公开联系方式')
+    return
+  }
+  
+  showDialog({
+    title: '负责人联系方式',
+    message: `姓名：${detail.value.leaderName}\n手机：${detail.value.leaderPhone}\n\n温馨提示：请礼貌沟通，说明来意`,
+    confirmButtonText: '复制手机号',
+    cancelButtonText: '关闭',
+    closeOnClickOverlay: true
+  }).then(() => {
+    // 复制手机号到剪贴板
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(detail.value.leaderPhone || '')
+      showToast('已复制到剪贴板')
+    } else {
+      // 兼容方案
+      const input = document.createElement('input')
+      input.value = detail.value.leaderPhone || ''
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+      showToast('已复制到剪贴板')
+    }
+  }).catch(() => {
+    // 用户点击取消，不做任何操作
+  })
 }
 
+// 按钮配置
+const buttonConfig = computed(() => {
+  if (detail.value.isOwner) {
+    return { text: '这是我的项目', disabled: true, color: '#999' }
+  }
+  
+  switch (detail.value.applicationStatus) {
+    case 'PENDING':
+      return { text: '申请审核中', disabled: true, color: '#ff9800' }
+    case 'APPROVED':
+      return { text: '已加入项目', disabled: true, color: '#4caf50' }
+    case 'REJECTED':
+      return { text: '申请未通过', disabled: true, color: '#f44336' }
+    default:
+      return { text: '申请加入项目', disabled: false, color: '#7c3aed' }
+  }
+})
+
 const handleJoin = () => {
-  showToast('申请已提交，请等待审核')
+  if (detail.value.isOwner) {
+    showToast('不能申请自己的项目')
+    return
+  }
+  
+  if (detail.value.applicationStatus) {
+    showToast('您已经申请过该项目')
+    return
+  }
+  
+  showApplyDialog.value = true
+}
+
+// 提交申请
+const handleApply = async (action: string) => {
+  if (action === 'confirm') {
+    if (!applyForm.value.applicationReason || applyForm.value.applicationReason.trim().length < 20) {
+      showToast('请输入至少20个字的申请理由')
+      return false
+    }
+
+    const toast = showLoadingToast({
+      message: '提交中...',
+      forbidClick: true,
+      duration: 0
+    })
+
+    try {
+      await applyToJoinProject({
+        projectId: detail.value.projectId!,
+        applicationReason: applyForm.value.applicationReason.trim(),
+        skills: applyForm.value.skills.trim() || undefined
+      })
+
+      closeToast()
+      showToast('申请已提交，请等待审核')
+      
+      // 更新申请状态
+      detail.value.applicationStatus = 'PENDING'
+      
+      // 清空表单
+      applyForm.value = {
+        applicationReason: '',
+        skills: ''
+      }
+      
+      return true
+    } catch (error: any) {
+      closeToast()
+      const msg = error?.response?.data?.message || '申请失败，请重试'
+      showToast(msg)
+      return false
+    }
+  }
+  return true
 }
 </script>

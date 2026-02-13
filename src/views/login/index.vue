@@ -83,7 +83,8 @@ const ROLE_PATH_MAP: Record<string, string> = {
   'ROLE_ADMIN': '/admin/home',
   'ROLE_SCHOOL': '/school/home',
   'ROLE_STUDENT': '/student/home',
-  'ROLE_COMPANY': '/company/home'
+  'ROLE_COMPANY': '/company/home',
+  'ROLE_TEACHER': '/teacher/home'
 }
 
 const loginForm = reactive({

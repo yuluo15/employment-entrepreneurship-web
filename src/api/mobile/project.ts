@@ -12,6 +12,7 @@ export interface MyProjectVo {
     auditReason?: string
     teamSize: number
     createTime?: string
+    pendingApplicationCount: number // 待审核申请数量
 }
 
 // 表单 DTO
@@ -37,10 +38,15 @@ export interface ProjectDetailVo {
     tags: string[] // [domain, statusText]
     schoolName: string
     leaderName: string
+    leaderId: string
+    leaderPhone: string // 负责人手机号
     mentorName: string
     teamSize: number
     description: string
     needs: string
+    isCollected: boolean
+    isOwner: boolean // 是否是项目负责人
+    applicationStatus: string | null // 申请状态：null=未申请，PENDING=待审核，APPROVED=已通过，REJECTED=已拒绝
 }
 
 // --- API 方法 ---
@@ -68,4 +74,44 @@ export function saveProject(data: ProjectForm) {
 // 5. 删除
 export function deleteProject(id: string) {
     return request.post(`/mobile/project/delete/${id}`)
+}
+
+// 6. 申请加入项目
+export function applyToJoinProject(data: {
+    projectId: string
+    applicationReason: string
+    skills?: string
+}) {
+    return request.post('/mobile/project/apply', data)
+}
+
+// 7. 取消申请
+export function cancelApplication(applicationId: string) {
+    return request.put(`/mobile/project/apply/${applicationId}/cancel`)
+}
+
+// 8. 查看我的申请记录
+export function getMyApplications(params: {
+    pageNum: number
+    pageSize: number
+    status?: string
+}) {
+    return request.get('/mobile/project/my-applications', { params })
+}
+
+// 9. 获取项目的申请列表（项目负责人）
+export function getProjectApplications(projectId: string, params: {
+    pageNum: number
+    pageSize: number
+    status?: string
+}) {
+    return request.get(`/mobile/project/${projectId}/applications`, { params })
+}
+
+// 10. 处理申请（通过/拒绝）
+export function handleApplication(applicationId: string, data: {
+    action: 'APPROVE' | 'REJECT'
+    replyMessage?: string
+}) {
+    return request.put(`/mobile/project/application/${applicationId}/handle`, data)
 }

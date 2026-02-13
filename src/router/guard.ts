@@ -14,6 +14,7 @@ const ROLE_NAME_MAP: Record<string, string> = {
   'ROLE_STUDENT': 'student',
   'ROLE_COMPANY': 'company',
   'ROLE_SCHOOL': 'school',
+  'ROLE_TEACHER': 'teacher',
 }
 
 const setupRouterGuard = (router: Router): void => {

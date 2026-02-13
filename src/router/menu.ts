@@ -6,7 +6,7 @@ import {
 } from '@element-plus/icons-vue'
 
 // ... (类型定义 UserRole, SidebarMenuItem, ROLE_BASE_PATH, ROLE_TITLES 等保持不变) ...
-export type UserRole = 'admin' | 'student' | 'company' | 'school'
+export type UserRole = 'admin' | 'student' | 'company' | 'school' | 'teacher'
 
 export interface SidebarMenuItem extends RouteRecordRaw {
   fullPath: string
@@ -18,6 +18,7 @@ export const ROLE_BASE_PATH: Record<UserRole, string> = {
   student: '/student',
   company: '/company',
   school: '/school',
+  teacher: '/teacher',
 }
 
 export const ROLE_TITLES: Record<UserRole, string> = {
@@ -25,6 +26,7 @@ export const ROLE_TITLES: Record<UserRole, string> = {
   student: '学生端',
   company: '企业端',
   school: '校级管理端',
+  teacher: '教师端',
 }
 
 export const DEFAULT_ROLE: UserRole = 'admin'
@@ -329,6 +331,14 @@ const studentMenu: RouteRecordRaw[] = [
     meta: { title: '发布项目', hideNavBar: false, hideTabBar: true },
     component: () => import('@/views/mobile/my/project-edit.vue')
   },
+  
+  // [新增] 项目申请列表
+  {
+    path: 'my/project/:projectId/applications',
+    name: 'ProjectApplications',
+    meta: { title: '申请列表', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/my/project-applications.vue')
+  },
   // [新增] 个人信息编辑
   {
     path: 'profile/info',
@@ -533,11 +543,58 @@ const schoolMenu: RouteRecordRaw[] = [
   }
 ]
 
+// --- 教师端菜单 ---
+const teacherMenu: RouteRecordRaw[] = [
+  {
+    path: 'home',
+    name: 'TeacherHome',
+    meta: { title: '工作台', hideNavBar: true },
+    component: () => import('@/views/teacher/home/index.vue')
+  },
+  {
+    path: 'projects',
+    name: 'TeacherProjects',
+    meta: { title: '创业项目' },
+    component: () => import('@/views/teacher/projects/index.vue')
+  },
+  {
+    path: 'project/:id',
+    name: 'TeacherProjectDetail',
+    meta: { title: '项目详情', hideNavBar: true, hideTabBar: true },
+    component: () => import('@/views/teacher/project/detail.vue') // 教师端专用项目详情页
+  },
+  {
+    path: 'guidance',
+    name: 'TeacherGuidance',
+    meta: { title: '指导记录' },
+    component: () => import('@/views/teacher/guidance/index.vue')
+  },
+  {
+    path: 'profile',
+    name: 'TeacherProfile',
+    meta: { title: '个人中心' },
+    component: () => import('@/views/teacher/profile/index.vue')
+  },
+  {
+    path: 'profile/info',
+    name: 'TeacherProfileInfo',
+    meta: { title: '个人信息', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/profile/info.vue') // 复用学生端的个人信息页
+  },
+  {
+    path: 'settings/password',
+    name: 'TeacherChangePassword',
+    meta: { title: '修改密码', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/settings/password.vue') // 复用学生端的修改密码页
+  }
+]
+
 export const roleMenus: Record<UserRole, RouteRecordRaw[]> = {
   admin: adminMenu,
   student: studentMenu,
   company: companyMenu,
   school: schoolMenu,
+  teacher: teacherMenu,
 }
 
 // ... (buildSidebarMenus 等辅助函数保持不变) ...

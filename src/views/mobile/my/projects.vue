@@ -54,6 +54,19 @@
               </button>
               <div class="w-[1px] bg-gray-100 my-2"></div>
               <button
+                  class="flex-1 py-3 text-sm active:bg-gray-50 flex justify-center items-center gap-1 relative"
+                  :class="item.pendingApplicationCount > 0 ? 'text-blue-600' : 'text-gray-600'"
+                  @click="viewApplications(item.id)"
+              >
+                <van-icon name="friends-o" /> 申请
+                <van-badge 
+                  v-if="item.pendingApplicationCount > 0" 
+                  :content="item.pendingApplicationCount" 
+                  class="ml-1"
+                />
+              </button>
+              <div class="w-[1px] bg-gray-100 my-2"></div>
+              <button
                   class="flex-1 py-3 text-sm text-red-500 active:bg-gray-50 flex justify-center items-center gap-1"
                   @click="handleDelete(item.id)"
               >
@@ -158,5 +171,9 @@ const handleDelete = (id: string) => {
         onRefresh() // 刷新列表
       })
       .catch(() => {})
+}
+
+const viewApplications = (projectId: string) => {
+  router.push(`/student/my/project/${projectId}/applications`)
 }
 </script>

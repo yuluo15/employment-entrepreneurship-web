@@ -61,6 +61,9 @@ export const useUserStore = defineStore('user', () => {
         tabStore.reset()
     }
 
+    // 清除用户信息（别名方法，与 logout 功能相同）
+    const clearUserInfo = logout
+
     // [新增] 更新用户信息的 Action
     // 允许传入部分字段进行更新，例如只更新 avatar 和 name
     const setUserInfo = (info: Partial<UserInfo>) => {
@@ -72,5 +75,5 @@ export const useUserStore = defineStore('user', () => {
         localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
     }
 
-    return { userId, token, role, userInfo, login, logout, setUserInfo }
+    return { userId, token, role, userInfo, login, logout, clearUserInfo, setUserInfo }
 })
