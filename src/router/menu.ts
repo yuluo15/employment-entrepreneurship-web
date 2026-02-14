@@ -244,6 +244,20 @@ const studentMenu: RouteRecordRaw[] = [
     meta: { title: '创新创业' },
     component: () => import('@/views/mobile/entrepreneurship/index.vue')
   },
+  // [新增] 通知公告列表
+  {
+    path: 'notices',
+    name: 'NoticeList',
+    meta: { title: '通知公告', hideTabBar: true },
+    component: () => import('@/views/mobile/notice/list.vue')
+  },
+  // [新增] 通知公告详情
+  {
+    path: 'notice/:id',
+    name: 'NoticeDetail',
+    meta: { title: '通知详情', hideTabBar: true },
+    component: () => import('@/views/mobile/notice/detail.vue')
+  },
   {
     path: 'profile',
     name: 'StudentProfile',

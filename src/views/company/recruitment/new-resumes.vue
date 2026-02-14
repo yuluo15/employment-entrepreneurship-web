@@ -41,6 +41,14 @@
         <el-form-item>
           <el-button type="primary" :icon="Search" @click="handleQuery">搜索</el-button>
           <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+          <el-button 
+            type="success" 
+            :icon="MagicStick" 
+            @click="handleAIScreen"
+            :disabled="!queryParams.jobId"
+          >
+            AI智能筛选
+          </el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -226,13 +234,106 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- AI筛选结果对话框 -->
+    <el-dialog 
+      v-model="aiScreenDialogVisible" 
+      title="AI智能筛选结果" 
+      width="1200px"
+      :close-on-click-modal="false"
+    >
+      <el-alert
+        title="AI已为您筛选出最匹配的候选人"
+        type="success"
+        :closable="false"
+        class="mb-4"
+      >
+        <template #default>
+          <div class="text-sm">
+            根据职位要求和候选人简历的语义相似度分析，按匹配度从高到低排序
+          </div>
+        </template>
+      </el-alert>
+
+      <el-table 
+        v-loading="aiScreenLoading" 
+        :data="aiScreenResults" 
+        style="width: 100%"
+        max-height="500"
+      >
+        <el-table-column type="index" label="排名" width="60" align="center" />
+        
+        <el-table-column label="匹配度" width="120" align="center">
+          <template #default="{ row }">
+            <el-tag :type="getMatchScoreType(row.matchScore)" size="large" effect="dark">
+              🎯 {{ row.matchScore }}%
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="studentName" label="姓名" width="100" />
+        
+        <el-table-column label="基本信息" min-width="200">
+          <template #default="{ row }">
+            <div class="text-sm">
+              <div class="mb-1">{{ row.school }} | {{ row.major }}</div>
+              <div class="text-gray-500">{{ getEducationLabel(row.education) }} | {{ row.graduationYear }}届</div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="求职意向" min-width="180">
+          <template #default="{ row }">
+            <div class="text-sm">
+              <div class="mb-1">{{ row.expectedPosition }}</div>
+              <div class="text-gray-500">{{ row.expectedSalary }} | {{ row.targetCity }}</div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="skills" label="技能" min-width="200" show-overflow-tooltip />
+
+        <el-table-column label="匹配理由" min-width="180">
+          <template #default="{ row }">
+            <div class="text-sm text-blue-600">
+              <el-icon class="mr-1"><InfoFilled /></el-icon>
+              {{ row.matchReason }}
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="联系方式" width="180">
+          <template #default="{ row }">
+            <div class="text-sm">
+              <div class="mb-1">📱 {{ row.phone }}</div>
+              <div class="text-gray-500">📧 {{ row.email }}</div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" width="120" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" size="small" @click="handleViewAIResume(row.resumeId)">
+              查看简历
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <el-button @click="aiScreenDialogVisible = false">关闭</el-button>
+        <el-button type="primary" @click="aiScreenDialogVisible = false">
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
-import { Search, Refresh } from '@element-plus/icons-vue'
+import { Search, Refresh, MagicStick, InfoFilled } from '@element-plus/icons-vue'
 import {
   getDeliveryList,
   getResumeDetail,
@@ -245,6 +346,7 @@ import {
   type InterviewForm,
   type JobOption
 } from '@/api/recruitment'
+import { screenResumes, type ResumeMatchVO } from '@/api/company/ai'
 
 // 查询参数
 const queryParams = reactive<DeliveryQuery>({
@@ -419,6 +521,70 @@ const getEducationLabel = (education: string) => {
     'doctor': '博士'
   }
   return map[education] || education
+}
+
+// AI筛选简历
+const aiScreenDialogVisible = ref(false)
+const aiScreenLoading = ref(false)
+const aiScreenResults = ref<ResumeMatchVO[]>([])
+
+const handleAIScreen = async () => {
+  if (!queryParams.jobId) {
+    ElMessage.warning('请先选择职位')
+    return
+  }
+
+  const selectedJob = jobOptions.value.find(j => j.id === queryParams.jobId)
+  
+  ElMessageBox.confirm(
+    `确定要为职位"${selectedJob?.jobName}"进行AI智能筛选吗？`,
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'info'
+    }
+  ).then(async () => {
+    aiScreenLoading.value = true
+    try {
+      const res = await screenResumes(queryParams.jobId, 20)
+      aiScreenResults.value = res.data || []
+      aiScreenDialogVisible.value = true
+      
+      if (aiScreenResults.value.length === 0) {
+        ElMessage.info('未找到匹配的简历，请尝试其他职位')
+      } else {
+        ElMessage.success(`找到 ${aiScreenResults.value.length} 份匹配简历`)
+      }
+    } catch (error) {
+      console.error('AI筛选失败', error)
+      ElMessage.error('AI筛选失败，请稍后重试')
+    } finally {
+      aiScreenLoading.value = false
+    }
+  }).catch(() => {
+    // 取消操作
+  })
+}
+
+// 查看AI筛选的简历详情
+const handleViewAIResume = async (resumeId: string) => {
+  try {
+    const res = await getResumeDetail(resumeId)
+    currentResume.value = res.data
+    resumeDialogVisible.value = true
+  } catch (error) {
+    console.error('加载简历详情失败', error)
+    ElMessage.error('加载简历详情失败')
+  }
+}
+
+// 获取匹配度标签类型
+const getMatchScoreType = (score: number) => {
+  if (score >= 90) return 'success'
+  if (score >= 80) return 'primary'
+  if (score >= 70) return 'warning'
+  return 'info'
 }
 
 onMounted(() => {

@@ -49,3 +49,8 @@ export function logoutApi(userId: string) {
 export function registerCompanyApi(data: any) {
     return request.post('/auth/register/company', data)
 }
+
+// 发送邮箱验证码
+export function sendEmailCodeApi(email: string) {
+    return request.post('/api/sendEmail/code', { email })
+}

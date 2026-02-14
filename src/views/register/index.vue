@@ -46,13 +46,29 @@
             v-if="activeStep < 3"
         >
           <div v-show="activeStep === 0" class="step-content">
-            <el-form-item label="管理员账号" prop="adminAccount">
+            <el-form-item label="管理员邮箱" prop="adminAccount">
               <el-input
                   v-model="form.adminAccount"
-                  placeholder="请输入手机号作为登录账号"
-                  :prefix-icon="User"
-                  maxlength="11"
+                  placeholder="请输入邮箱作为登录账号"
+                  :prefix-icon="Message"
               />
+            </el-form-item>
+            <el-form-item label="邮箱验证码" prop="emailCode">
+              <div class="flex gap-2">
+                <el-input
+                    v-model="form.emailCode"
+                    placeholder="请输入6位验证码"
+                    maxlength="6"
+                    class="flex-1"
+                />
+                <el-button
+                    :disabled="countdown > 0"
+                    @click="sendEmailCode"
+                    style="width: 120px"
+                >
+                  {{ countdown > 0 ? `${countdown}秒后重试` : '发送验证码' }}
+                </el-button>
+              </div>
             </el-form-item>
             <el-form-item label="设置密码" prop="password">
               <el-input
@@ -155,7 +171,7 @@
           <h2 class="text-2xl font-bold text-gray-800 mb-2">提交成功</h2>
           <p class="text-gray-500 mb-8">
             您的入驻申请已提交，管理员将在 1-3 个工作日内完成审核。<br>
-            审核结果将通过短信发送至您的手机。
+            审核结果将通过邮件发送至您的邮箱。
           </p>
           <el-button type="primary" size="large" class="w-48" @click="router.push('/login')">返回登录页</el-button>
         </div>
@@ -181,20 +197,22 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
-  User, Lock, OfficeBuilding, Postcard, Phone,
+  User, Lock, OfficeBuilding, Postcard, Phone, Message,
   UploadFilled, Refresh, SuccessFilled
 } from '@element-plus/icons-vue'
 import type { UploadProps } from 'element-plus'
-import { registerCompanyApi } from '@/api/auth'
+import { registerCompanyApi, sendEmailCodeApi } from '@/api/auth'
 
 const router = useRouter()
 const formRef = ref()
 const loading = ref(false)
 const activeStep = ref(0)
+const countdown = ref(0)
 
 const form = reactive({
   // Step 1
   adminAccount: '',
+  emailCode: '',
   password: '',
   confirmPassword: '',
   // Step 2
@@ -207,6 +225,17 @@ const form = reactive({
   contactPerson: '',
   contactPhone: ''
 })
+
+// 邮箱格式校验
+const validateEmail = (rule: any, value: any, callback: any) => {
+  if (value === '') {
+    callback(new Error('请输入邮箱'))
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    callback(new Error('邮箱格式不正确'))
+  } else {
+    callback()
+  }
+}
 
 // 密码一致性校验
 const validatePass2 = (rule: any, value: any, callback: any) => {
@@ -221,7 +250,8 @@ const validatePass2 = (rule: any, value: any, callback: any) => {
 
 const rules = {
   // Step 1
-  adminAccount: [{ required: true, message: '请输入手机号', trigger: 'blur' }, { min: 11, max: 11, message: '格式不正确', trigger: 'blur' }],
+  adminAccount: [{ validator: validateEmail, trigger: 'blur' }],
+  emailCode: [{ required: true, message: '请输入验证码', trigger: 'blur' }, { len: 6, message: '验证码为6位', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 6, message: '密码不能少于6位', trigger: 'blur' }],
   confirmPassword: [{ validator: validatePass2, trigger: 'blur' }],
   // Step 2
@@ -237,10 +267,39 @@ const rules = {
 
 // 步骤字段映射（用于分步校验）
 const stepFields = [
-  ['adminAccount', 'password', 'confirmPassword'], // Step 0
-  ['name', 'code', 'industry', 'scale'],           // Step 1
-  ['licenseUrl', 'contactPerson', 'contactPhone']  // Step 2
+  ['adminAccount', 'emailCode', 'password', 'confirmPassword'], // Step 0
+  ['name', 'code', 'industry', 'scale'],                        // Step 1
+  ['licenseUrl', 'contactPerson', 'contactPhone']               // Step 2
 ]
+
+// 发送邮箱验证码
+const sendEmailCode = async () => {
+  // 先校验邮箱格式
+  if (!form.adminAccount) {
+    ElMessage.warning('请先输入邮箱')
+    return
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.adminAccount)) {
+    ElMessage.warning('邮箱格式不正确')
+    return
+  }
+
+  try {
+    await sendEmailCodeApi(form.adminAccount)
+    ElMessage.success('验证码已发送，请查收邮件')
+    
+    // 开始倒计时
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error) {
+    console.error('发送验证码失败', error)
+  }
+}
 
 // 下一步
 const nextStep = async () => {

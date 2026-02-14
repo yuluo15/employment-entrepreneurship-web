@@ -9,10 +9,6 @@
             readonly
         />
       </div>
-      <div class="px-2 text-center" @click="$router.push('/student/message')">
-        <van-icon name="chat-o" size="24" color="#666" badge="9" />
-        <div class="text-[10px] text-gray-500 scale-90">消息</div>
-      </div>
     </div>
 
     <div class="px-3 pt-2">
@@ -26,6 +22,65 @@
           </div>
         </van-swipe-item>
       </van-swipe>
+    </div>
+
+    <!-- AI推荐模块 -->
+    <div class="mt-3 bg-white mx-3 rounded-lg p-3 shadow-sm">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-base font-bold text-gray-800 flex items-center">
+          <van-icon name="fire" color="#ee0a24" class="mr-1" />
+          AI为你推荐
+        </h3>
+      </div>
+
+      <van-loading v-if="aiLoading" class="text-center py-4" />
+
+      <div v-else-if="recommendedJobs.length > 0" class="space-y-3">
+        <div
+          v-for="job in recommendedJobs"
+          :key="job.jobId"
+          class="border border-gray-100 p-3 rounded-lg active:bg-gray-50 transition-colors"
+          @click="toJobDetail(job.jobId)"
+        >
+          <!-- 匹配度标签 -->
+          <div class="flex items-center justify-between mb-2">
+            <van-tag 
+              :type="getMatchType(job.matchScore)" 
+              size="medium"
+            >
+              🎯 匹配度 {{ job.matchScore }}%
+            </van-tag>
+            <van-tag plain type="primary" size="small">AI推荐</van-tag>
+          </div>
+
+          <!-- 职位信息 -->
+          <div class="font-bold text-base text-gray-800 mb-2">
+            {{ job.title }}
+          </div>
+
+          <div class="flex items-center text-sm text-gray-600 mb-2 flex-wrap gap-2">
+            <span class="text-blue-600 font-medium">{{ job.salaryRange }}</span>
+            <span>{{ job.location }}</span>
+            <span class="text-gray-400">{{ job.companyName }}</span>
+          </div>
+
+          <!-- 推荐理由 -->
+          <div class="flex items-start gap-1 text-xs text-gray-500 bg-blue-50 p-2 rounded">
+            <van-icon name="info-o" size="14" color="#3b82f6" class="mt-0.5 shrink-0" />
+            <span>{{ job.recommendReason }}</span>
+          </div>
+        </div>
+      </div>
+
+      <van-empty 
+        v-else
+        description="暂无推荐职位，完善简历后获得更多推荐"
+        image-size="80"
+      >
+        <van-button type="primary" size="small" @click="toResume">
+          完善简历
+        </van-button>
+      </van-empty>
     </div>
 
     <div class="mt-3 bg-white mx-3 rounded-lg p-3 shadow-sm">
@@ -133,6 +188,7 @@ import { ref, onMounted, onActivated } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { searchApi, type SearchResultVo } from '@/api/mobile/job'
 import { getHomeNotices } from '@/api/mobile/notice'
+import { getAIRecommendJobs, type JobRecommendationVO } from '@/api/mobile/ai'
 
 defineOptions({ name: 'StudentHome' })
 
@@ -152,6 +208,10 @@ const pageNum = ref(1)
 // 通知公告
 const notices = ref<any[]>([])
 
+// AI推荐
+const aiLoading = ref(true)
+const recommendedJobs = ref<JobRecommendationVO[]>([])
+
 // 2. 同样的滚动条保持逻辑 (首页通常也需要)
 const scrollTop = ref(0)
 
@@ -167,10 +227,42 @@ onActivated(() => {
 })
 
 onMounted(() => {
-  // 加载职位列表和通知公告
+  // 加载职位列表、通知公告和AI推荐
   onLoad()
   loadNotices()
+  loadRecommendations()
 })
+
+// 加载AI推荐
+const loadRecommendations = async () => {
+  try {
+    const res = await getAIRecommendJobs(5)
+    recommendedJobs.value = res.data || []
+  } catch (error) {
+    console.error('加载AI推荐失败', error)
+    // 如果失败，不影响页面其他功能
+  } finally {
+    aiLoading.value = false
+  }
+}
+
+// 获取匹配度标签类型
+const getMatchType = (score: number) => {
+  if (score >= 90) return 'success'
+  if (score >= 80) return 'primary'
+  if (score >= 70) return 'warning'
+  return 'default'
+}
+
+// 跳转职位详情
+const toJobDetail = (jobId: string) => {
+  router.push(`/student/job/${jobId}`)
+}
+
+// 跳转简历
+const toResume = () => {
+  router.push('/student/resume')
+}
 
 // 加载通知公告
 const loadNotices = async () => {

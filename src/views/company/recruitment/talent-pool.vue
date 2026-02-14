@@ -249,7 +249,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, FormInstance } from 'element-plus'
+import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { Search, Refresh, UserFilled, CircleClose, DataLine } from '@element-plus/icons-vue'
 import {
   getTalentPoolList,
