@@ -33,33 +33,68 @@ export interface DeliveryItem {
 // 简历详情
 export interface ResumeDetail extends DeliveryItem {
   resumeId: string
-  jobIntention?: string
+  expectedPosition?: string
   expectedSalary?: string
-  expectedCity?: string
+  targetCity?: string
+  jobType?: number
+  arrivalTime?: string
   skills?: string
-  selfEvaluation?: string
-  educationList?: Array<{
+  personalSummary?: string
+  educationHistory?: Array<{
     school: string
     major: string
-    education: string
+    degree: string
     startDate: string
     endDate: string
+    description?: string
   }>
-  experienceList?: Array<{
+  internshipExp?: Array<{
     company: string
-    position: string
+    role: string
     startDate: string
     endDate: string
     description: string
   }>
+  projectExp?: Array<{
+    projectName: string
+    role: string
+    startDate: string
+    endDate: string
+    description: string
+    projectLink?: string
+  }>
+  certificates?: any[]
+  resumeScore?: number
 }
+// export interface ResumeDetail extends DeliveryItem {
+//   resumeId: string
+//   jobIntention?: string
+//   expectedSalary?: string
+//   expectedCity?: string
+//   skills?: string
+//   selfEvaluation?: string
+//   educationList?: Array<{
+//     school: string
+//     major: string
+//     education: string
+//     startDate: string
+//     endDate: string
+//   }>
+//   experienceList?: Array<{
+//     company: string
+//     position: string
+//     startDate: string
+//     endDate: string
+//     description: string
+//   }>
+// }
 
 // 面试表单
 export interface InterviewForm {
   deliveryId: string
   interviewTime: string
   duration: number
-  type: string  // ONSITE/VIDEO/PHONE
+  type: number  // ONSITE/VIDEO/PHONE
   location: string
   notes?: string
 }
@@ -75,7 +110,7 @@ export interface InterviewQuery {
   pageNum: number
   pageSize: number
   studentName?: string
-  status?: string
+  status?: number
   startDate?: string
   endDate?: string
 }
@@ -91,12 +126,13 @@ export interface InterviewItem {
   jobName: string
   interviewTime: string
   duration: number
-  type: string  // ONSITE/VIDEO/PHONE
+  type: number  // ONSITE/VIDEO/PHONE
   location: string
   notes?: string
-  status: string  // SCHEDULED/COMPLETED/CANCELLED
+  status: number  // SCHEDULED/COMPLETED/CANCELLED
   interviewScore?: number
   interviewComment?: string
+  interviewResult?: string  // PASS/FAIL
 }
 
 // 完成面试表单
@@ -262,4 +298,18 @@ export function getTalentStatistics() {
  */
 export function sendOffer(data: OfferForm) {
   return request.post('/company/offer/send', data)
+}
+
+/**
+ * 从面试发放Offer
+ */
+export function sendOfferFromInterview(data: OfferForm) {
+  return request.post('/company/interview/offer', data)
+}
+
+/**
+ * 归档候选人（面试不通过）
+ */
+export function archiveCandidate(deliveryId: string) {
+  return request.post('/company/interview/archive', { deliveryId })
 }

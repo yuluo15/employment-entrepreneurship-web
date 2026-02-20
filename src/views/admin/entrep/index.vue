@@ -116,13 +116,14 @@
         </el-table-column>
 
         <el-table-column prop="mentorName" label="指导老师" width="100" align="center" />
+<!--        <el-table-column prop="status" label="状态" width="100" align="center" />-->
 
         <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.status === 0" type="warning">审核中</el-tag>
-            <el-tag v-else-if="row.status === 1" type="success">孵化中</el-tag>
-            <el-tag v-else-if="row.status === 2" type="danger">已驳回</el-tag>
-            <el-tag v-else-if="row.status === 3" type="info">已完结</el-tag>
+            <el-tag v-if="row.status === '0'" type="warning">审核中</el-tag>
+            <el-tag v-else-if="row.status === '1'" type="success">孵化中</el-tag>
+            <el-tag v-else-if="row.status === '2'" type="danger">已驳回</el-tag>
+            <el-tag v-else-if="row.status === '3'" type="info">已完结</el-tag>
           </template>
         </el-table-column>
 
@@ -275,7 +276,7 @@ const queryParams = reactive<ProjectQuery>({
 
 // 计算待审核数量
 const pendingCount = computed(() => {
-  return tableData.value.filter(item => item.status === 0).length
+  return tableData.value.filter(item => item.status === '0').length
 })
 
 // --- Methods ---

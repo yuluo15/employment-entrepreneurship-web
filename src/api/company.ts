@@ -210,3 +210,92 @@ export interface JobRank {
 export function getCompanyDashboard() {
   return request.get<any, { data: DashboardData }>('/company/dashboard')
 }
+
+// 企业实体 VO (对应 CompanyEntity)
+export interface CompanyVo {
+  id: string
+  name: string
+  code: string
+  industry: string
+  scale: string
+  logo: string
+  description: string
+  address: string
+  contactPerson: string
+  contactPhone: string
+  email: string
+  licenseUrl: string
+  status: number
+  auditReason?: string
+  auditTime?: string
+  auditorId?: string
+  createTime?: string
+  updateTime?: string
+  isDeleted?: number
+  defaultAccountId?: string
+  fundingStage?: string
+  tags?: string
+  website?: string
+  images?: string
+}
+
+// 列表查询参数
+export interface CompanyQueryParams {
+  pageNum: number
+  pageSize: number
+  name?: string
+  code?: string
+  status?: number
+}
+
+// 更新/创建企业参数 (对应 CompanyCreateReq)
+export interface CompanyUpdateReq {
+  id?: string
+  logo: string
+  licenseUrl?: string
+  name: string
+  code: string
+  adminAccount: string
+  password?: string // 修改时可能不需要传或必传，根据实际业务判断
+  industry?: string
+  scale?: string
+  contactPerson?: string
+  contactPhone: string
+  email?: string
+  address?: string
+  description?: string
+}
+
+// 审核/更新状态参数 (对应 AuditCompanyReq)
+export interface AuditCompanyReq {
+  id: string
+  status: number
+  reason?: string // 驳回原因等
+}
+
+// --- API 方法定义 ---
+
+// 1. 获取企业列表 (分页)
+export function getCompanyList(params: CompanyQueryParams) {
+  return request.get('/companyMgr/list', { params })
+}
+
+// 2. 审核企业入驻
+export function auditCompany(data: AuditCompanyReq) {
+  return request.post('/companyMgr/audit', data)
+}
+
+// 3. 更新企业信息
+export function updateCompany(data: CompanyUpdateReq) {
+  return request.post('/companyMgr/update', data)
+}
+
+// 4. 删除企业 (逻辑删除)
+export function deleteCompany(id: string) {
+  return request.delete(`/companyMgr/delete/${id}`)
+}
+
+// 5. 更新企业状态 (启用/禁用)
+export function updateCompanyStatus(data: AuditCompanyReq) {
+  return request.post('/companyMgr/updateStatus', data)
+}

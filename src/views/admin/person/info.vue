@@ -69,14 +69,14 @@
           <span class="text-gray-500">{{ formData.createTime }}</span>
         </el-form-item>
 
-        <el-form-item label="最近登录">
-          <span class="text-gray-500">{{ formData.loginDate || '暂无登录记录' }}</span>
-        </el-form-item>
+<!--        <el-form-item label="最近登录">-->
+<!--          <span class="text-gray-500">{{ formData.loginDate || '暂无登录记录' }}</span>-->
+<!--        </el-form-item>-->
 
         <el-form-item>
           <el-button type="primary" @click="handleSubmit" :loading="submitting">保存修改</el-button>
           <el-button @click="handleReset">重置</el-button>
-          <el-button type="warning" @click="goToChangePassword">修改密码</el-button>
+<!--          <el-button type="warning" @click="goToChangePassword">修改密码</el-button>-->
         </el-form-item>
       </el-form>
     </el-card>

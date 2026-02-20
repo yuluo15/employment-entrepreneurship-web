@@ -192,14 +192,31 @@
         </el-form-item>
 
         <el-row :gutter="20">
+<!--          <el-col :span="12">-->
+<!--            <el-form-item label="所属行业" prop="industry">-->
+<!--              <el-select v-model="form.industry" placeholder="请选择" class="w-full">-->
+<!--                <el-option label="互联网/IT" value="互联网/IT" />-->
+<!--                <el-option label="金融/银行" value="金融/银行" />-->
+<!--                <el-option label="教育/培训" value="教育/培训" />-->
+<!--                <el-option label="制造/实业" value="制造/实业" />-->
+<!--                <el-option label="其他" value="其他" />-->
+<!--              </el-select>-->
+<!--            </el-form-item>-->
+<!--          </el-col>-->
           <el-col :span="12">
             <el-form-item label="所属行业" prop="industry">
-              <el-select v-model="form.industry" placeholder="请选择" class="w-full">
-                <el-option label="互联网/IT" value="互联网/IT" />
-                <el-option label="金融/银行" value="金融/银行" />
-                <el-option label="教育/培训" value="教育/培训" />
-                <el-option label="制造/实业" value="制造/实业" />
-                <el-option label="其他" value="其他" />
+              <el-select
+                  v-model="form.industry"
+                  multiple
+                  placeholder="请选择(支持多选)"
+                  class="w-full"
+              >
+                <el-option
+                    v-for="item in industryOptions"
+                    :key="item.dictValue"
+                    :label="item.dictLabel"
+                    :value="item.dictValue"
+                />
               </el-select>
             </el-form-item>
           </el-col>
@@ -209,7 +226,9 @@
                 <el-option label="0-20人" value="0-20人" />
                 <el-option label="20-99人" value="20-99人" />
                 <el-option label="100-499人" value="100-499人" />
-                <el-option label="500人以上" value="500人以上" />
+                <el-option label="500人以上" value="500-999人" />
+                <el-option label="500人以上" value="1000-9999人" />
+                <el-option label="500人以上" value="10000人以上" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -327,6 +346,8 @@ import {
   getCompanyList, updateCompany, deleteCompany, updateCompanyStatus, auditCompany,
   type CompanyQuery
 } from '@/api/company'
+// 请根据你的 dict.ts 实际路径调整导入
+import { getDictDataList } from '@/api/dict' // 假设 dict.ts 在 @/api/dict
 
 const userStore = useUserStore()
 const loading = ref(false)
@@ -343,10 +364,29 @@ const formRef = ref()
 const queryParams = reactive<CompanyQuery>({
   pageNum: 1, pageSize: 10, name: '', code: '', status: null
 })
+// 在变量定义区域加入行业选项 ref
+const industryOptions = ref<any[]>([])
 
+// 定义获取字典数据的方法
+const getIndustryDict = async () => {
+  try {
+    const res = await getDictDataList({ pageNum: 1, pageSize: 50, dictType: 'sys_industry' })
+    // 根据后端返回的 dictSort 进行升序排序保证显示顺序一致
+    industryOptions.value = (res.data?.data || []).sort((a: any, b: any) => a.dictSort - b.dictSort)
+  } catch (error) {
+    console.error('获取行业字典失败', error)
+  }
+}
+
+// const form = reactive({
+//   id: '', name: '', code: '', logo: '', licenseUrl: '', industry: '', scale: '',
+//   contactPerson: '', contactPhone: '', email: '', address: '', description: ''
+// })
+// 修改 reactive 中的 form 定义，将 industry 的初始值设为空数组
 const form = reactive({
-  id: '', name: '', code: '', logo: '', licenseUrl: '', industry: '', scale: '',
-  contactPerson: '', contactPhone: '', email: '', address: '', description: ''
+  id: '', name: '', code: '', logo: '', licenseUrl: '',
+  industry: [] as string[] | string, // <--- 修改这里支持数组
+  scale: '', contactPerson: '', contactPhone: '', email: '', address: '', description: ''
 })
 
 const currentCompany = ref<any>({})
@@ -406,19 +446,49 @@ const handleUnfreeze = (row: any) => {
       })
 }
 
-// 只剩下 Edit
+// // 只剩下 Edit
+// const handleEdit = (row: any) => {
+//   dialogVisible.value = true
+//   if(formRef.value) formRef.value.resetFields()
+//   Object.assign(form, row)
+// }
+//
+// const submitForm = () => {
+//   formRef.value.validate(async (valid: boolean) => {
+//     if (valid) {
+//       submitLoading.value = true
+//       try {
+//         await updateCompany(form)
+//         ElMessage.success('操作成功')
+//         dialogVisible.value = false
+//         getList()
+//       } finally { submitLoading.value = false }
+//     }
+//   })
+// }
+
+// 修改 handleEdit 方法，将以逗号分隔的字符串转为数组，用于多选框回显
 const handleEdit = (row: any) => {
   dialogVisible.value = true
   if(formRef.value) formRef.value.resetFields()
   Object.assign(form, row)
+  // 如果后端返回的 industry 存在，将其按逗号切割成数组；否则设为空数组
+  form.industry = row.industry ? row.industry.split(',') : []
 }
 
+// 修改 submitForm 方法，在提交前将数组用逗号拼接成字符串
 const submitForm = () => {
   formRef.value.validate(async (valid: boolean) => {
     if (valid) {
       submitLoading.value = true
       try {
-        await updateCompany(form)
+        // 构造提交参数，避免直接修改 form 导致弹窗内的多选框闪烁
+        const submitData = { ...form }
+        if (Array.isArray(submitData.industry)) {
+          submitData.industry = submitData.industry.join(',')
+        }
+
+        await updateCompany(submitData)
         ElMessage.success('操作成功')
         dialogVisible.value = false
         getList()
@@ -477,6 +547,7 @@ const handleRejectAction = () => {
 
 onMounted(() => {
   getList()
+  getIndustryDict() // <--- 挂载时调用获取字典方法
 })
 </script>
 

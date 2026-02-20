@@ -432,13 +432,13 @@ const companyMenu: RouteRecordRaw[] = [
     children: [
       {
         path: 'profile',
-        name: 'AdminProfile',
+        name: 'CompanyProfile',
         meta: { title: '基本信息' },
         component: () => import('@/views/admin/person/info.vue'), // 后续替换为真实页面
       },
       {
         path: 'password',
-        name: 'AdminChangePassword',
+        name: 'CompanyChangePassword',
         meta: { title: '修改密码' },
         component: () => import('@/views/admin/person/password.vue'),
       }

@@ -149,9 +149,18 @@
             <span class="text-blue-600 font-bold text-sm shrink-0">{{ item.highlight }}</span>
           </div>
 
+<!--          <div class="flex items-center text-xs text-gray-500 mb-2">-->
+<!--            <span>{{ item.subTitle.split('|')[0] }}</span> <span class="mx-1.5 h-3 w-[1px] bg-gray-300" v-if="item.subTitle.includes('|')"></span>-->
+<!--            <span v-if="item.subTitle.includes('|')">{{ item.subTitle.split('|')[1] }}</span> <span class="mx-1.5 h-3 w-[1px] bg-gray-300"></span>-->
+<!--            <span>{{ item.location }}</span>-->
+<!--          </div>-->
           <div class="flex items-center text-xs text-gray-500 mb-2">
-            <span>{{ item.subTitle.split('|')[0] }}</span> <span class="mx-1.5 h-3 w-[1px] bg-gray-300" v-if="item.subTitle.includes('|')"></span>
-            <span v-if="item.subTitle.includes('|')">{{ item.subTitle.split('|')[1] }}</span> <span class="mx-1.5 h-3 w-[1px] bg-gray-300"></span>
+            <template v-if="item.subTitle">
+              <span>{{ item.subTitle.split('|')[0] }}</span>
+              <span class="mx-1.5 h-3 w-[1px] bg-gray-300" v-if="item.subTitle.includes('|')"></span>
+              <span v-if="item.subTitle.includes('|')">{{ item.subTitle.split('|')[1] }}</span>
+              <span class="mx-1.5 h-3 w-[1px] bg-gray-300"></span>
+            </template>
             <span>{{ item.location }}</span>
           </div>
 
@@ -228,7 +237,7 @@ onActivated(() => {
 
 onMounted(() => {
   // 加载职位列表、通知公告和AI推荐
-  onLoad()
+  // onLoad()
   loadNotices()
   loadRecommendations()
 })

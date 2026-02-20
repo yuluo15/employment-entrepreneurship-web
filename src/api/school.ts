@@ -689,3 +689,102 @@ export interface SchoolDashboardData {
 export function getSchoolDashboard() {
   return request.get<any, { data: SchoolDashboardData }>('/school/dashboard')
 }
+
+
+// 学校实体 VO
+export interface SchoolVo {
+  id: string
+  name: string
+  code: string
+  contactPhone: string
+  address: string
+  status: number // 状态
+  logo: string
+  createBy?: string
+  createTime?: string
+  updateTime?: string
+  defaultAccountId?: string // 默认管理员账号ID
+  email?: string // 扩展字段
+}
+
+// 列表查询参数
+export interface SchoolQueryParams {
+  pageNum: number
+  pageSize: number
+  name?: string
+  status?: number
+}
+
+// 创建学校参数 (SchoolCreateReq)
+export interface SchoolCreateReq {
+  name: string
+  code: string
+  email: string
+  contactPhone: string
+  logo?: string
+  address?: string
+}
+
+// 更新学校参数 (SchoolUpdateReq)
+export interface SchoolUpdateReq {
+  id: string
+  name?: string
+  logo?: string
+  contactPhone?: string
+  address?: string
+}
+
+// 重置密码参数 (IdReq)
+export interface SchoolPasswordReq {
+  id: string
+  newPassword: string
+}
+
+// 更新状态参数 (StatusUpdateReq)
+export interface SchoolStatusReq {
+  id: string
+  status: number
+}
+
+// --- API 方法定义 ---
+
+// 1. 获取学校列表 (分页)
+export function getSchoolList(params: SchoolQueryParams) {
+  return request.get('/schoolMgr/list', { params })
+}
+
+// 2. 创建学校
+export function createSchool(data: SchoolCreateReq) {
+  return request.post('/schoolMgr/createSchool', data)
+}
+
+// 3. 更新学校信息
+export function updateSchool(data: SchoolUpdateReq) {
+  return request.post('/schoolMgr/updateSchool', data)
+}
+
+// 4. 重置学校管理员密码
+export function resetSchoolPassword(data: SchoolPasswordReq) {
+  return request.post('/schoolMgr/resetPassword', data)
+}
+
+// 5. 删除学校 (逻辑删除)
+export function deleteSchool(id: string) {
+  return request.delete(`/schoolMgr/delete/${id}`)
+}
+
+// 6. 更新学校状态 (启用/禁用)
+export function updateSchoolStatus(data: SchoolStatusReq) {
+  return request.post('/schoolMgr/updateStatus', data)
+}
+
+// 7. 获取回收站列表 (已删除的学校)
+// 注意：后端接口 deletedList 似乎没有定义分页参数，这里按无参请求
+export function getDeletedSchoolList() {
+  return request.get('/schoolMgr/deletedList')
+}
+
+// 8. 恢复学校
+export function restoreSchool(id: string) {
+  return request.post(`/schoolMgr/restore/${id}`)
+}

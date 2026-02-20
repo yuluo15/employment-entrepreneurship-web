@@ -50,14 +50,14 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="email" label="登录邮箱" width="200" align="center" show-overflow-tooltip>
-          <template #default="scope">
-            <div class="flex items-center justify-center">
-              <el-icon class="mr-1 text-gray-400"><Message /></el-icon>
-              <span>{{ scope.row.email }}</span>
-            </div>
-          </template>
-        </el-table-column>
+<!--        <el-table-column prop="email" label="登录邮箱" width="200" align="center" show-overflow-tooltip>-->
+<!--          <template #default="scope">-->
+<!--            <div class="flex items-center justify-center">-->
+<!--              <el-icon class="mr-1 text-gray-400"><Message /></el-icon>-->
+<!--              <span>{{ scope.row.email }}</span>-->
+<!--            </div>-->
+<!--          </template>-->
+<!--        </el-table-column>-->
 
         <el-table-column prop="contactPhone" label="联系电话" width="150" align="center" />
         <el-table-column prop="createTime" label="入驻时间" width="180" align="center" />
@@ -144,18 +144,18 @@
           </span>
         </el-form-item>
 
-        <el-form-item label="学校邮箱" prop="email">
-          <el-input
-              v-model="form.email"
-              placeholder="作为管理员登录账号"
-              :disabled="dialogType === 'edit'"
-          >
-            <template #prefix><el-icon><Message /></el-icon></template>
-          </el-input>
-          <div class="text-gray-400 text-xs mt-1" v-if="dialogType === 'add'">
-            * 初始密码默认为 123456
-          </div>
-        </el-form-item>
+<!--        <el-form-item label="学校邮箱" prop="email">-->
+<!--          <el-input-->
+<!--              v-model="form.email"-->
+<!--              placeholder="作为管理员登录账号"-->
+<!--              :disabled="dialogType === 'edit'"-->
+<!--          >-->
+<!--            <template #prefix><el-icon><Message /></el-icon></template>-->
+<!--          </el-input>-->
+<!--          <div class="text-gray-400 text-xs mt-1" v-if="dialogType === 'add'">-->
+<!--            * 初始密码默认为 123456-->
+<!--          </div>-->
+<!--        </el-form-item>-->
 
         <el-form-item label="联系电话" prop="contactPhone">
           <el-input v-model="form.contactPhone" placeholder="手机号或座机号" style="width: 200px" />
@@ -222,7 +222,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import {
   Search, Refresh, Plus, Edit, Delete, Key, Picture,
-  RefreshLeft, InfoFilled, Message // 引入图标
+  RefreshLeft, InfoFilled, Message
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { UploadProps } from 'element-plus'
@@ -232,11 +232,13 @@ import {
   createSchool,
   updateSchool,
   deleteSchool,
-  resetPassword,
-  updateStatus,
+  // 【修改1】引入正确的函数名
+  resetSchoolPassword,
+  updateSchoolStatus,
   getDeletedSchoolList,
   restoreSchool,
-  type SchoolQuery
+  // 【修改2】引入正确的类型名
+  type SchoolQueryParams
 } from '@/api/school'
 
 const userStore = useUserStore()
@@ -253,7 +255,10 @@ const recycleLoading = ref(false)
 const recycleData = ref<any[]>([])
 
 const uploadApiUrl = '/api/common/upload'
-const uploadHeaders = computed(() => ({ 'Authorization': userStore.token }))
+// 确保 userStore.token 存在，或者处理 header
+const uploadHeaders = computed(() => ({ 'Authorization': userStore.token || '' }))
+
+// ... 图片验证逻辑保持不变 ...
 const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
   if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png') {
     ElMessage.error('图片必须是 JPG 或 PNG 格式!')
@@ -274,14 +279,15 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (response) => {
   }
 }
 
-const queryParams = reactive<SchoolQuery>({
+// 【修改3】使用 SchoolQueryParams 类型
+const queryParams = reactive<SchoolQueryParams>({
   pageNum: 1,
   pageSize: 10,
   name: '',
-  status: null
+  status: undefined // 或者是 null，根据后端需求
 })
 
-// 校验函数
+// ... 校验函数保持不变 ...
 const validatePhone = (rule: any, value: any, callback: any) => {
   if (!value) {
     return callback(new Error('请输入联系电话'))
@@ -295,7 +301,6 @@ const validatePhone = (rule: any, value: any, callback: any) => {
   }
 }
 
-// 【新增】邮箱校验
 const validateEmail = (rule: any, value: any, callback: any) => {
   const emailReg = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/
   if (!value) {
@@ -308,12 +313,11 @@ const validateEmail = (rule: any, value: any, callback: any) => {
   }
 }
 
-// 【修改】新增 email 字段
 const form = reactive({
   id: '',
   name: '',
   code: '',
-  email: '', // 必填，作为账号
+  email: '',
   contactPhone: '',
   address: '',
   status: 1,
@@ -323,11 +327,12 @@ const form = reactive({
 const rules = {
   name: [{ required: true, message: '请输入学校名称', trigger: 'blur' }],
   code: [{ required: true, message: '请输入院校代码', trigger: 'blur' }],
-  email: [{ required: true, validator: validateEmail, trigger: 'blur' }], // 邮箱必填
+  email: [{ required: true, validator: validateEmail, trigger: 'blur' }],
   logo: [{ required: true, message: '请上传学校Logo', trigger: 'change' }],
   contactPhone: [{ required: true, validator: validatePhone, trigger: 'blur' }]
 }
 
+// ... getList 保持不变 ...
 const getList = async () => {
   loading.value = true
   try {
@@ -348,10 +353,11 @@ const handleQuery = () => {
 
 const handleReset = () => {
   queryParams.name = ''
-  queryParams.status = null
+  queryParams.status = undefined
   handleQuery()
 }
 
+// 【修改4】使用 updateSchoolStatus
 const handleBeforeStatusChange = (row: any) => {
   return new Promise((resolve, reject) => {
     const actionText = row.status === 1 ? '停用' : '启用'
@@ -363,7 +369,8 @@ const handleBeforeStatusChange = (row: any) => {
     ).then(async () => {
       row.statusLoading = true
       try {
-        await updateStatus({ id: row.id, status: newStatus })
+        // 调用正确的 API 方法名
+        await updateSchoolStatus({ id: row.id, status: newStatus })
         ElMessage.success(`${actionText}成功`)
         resolve(true)
         getList()
@@ -376,6 +383,7 @@ const handleBeforeStatusChange = (row: any) => {
   })
 }
 
+// ... handleAdd, handleEdit, submitForm, handleDelete 保持不变 ...
 const handleAdd = () => {
   dialogType.value = 'add'
   dialogVisible.value = true
@@ -426,22 +434,25 @@ const handleDelete = (row: any) => {
   }).catch(() => {})
 }
 
+// 【修改5】使用 resetSchoolPassword
 const handleResetPwd = (row: any) => {
   ElMessageBox.prompt('请输入新密码', '重置密码', {
     confirmButtonText: '确定', cancelButtonText: '取消',
     inputPattern: /\S{6,}/, inputErrorMessage: '密码长度不能少于6位', inputValue: '123456'
   }).then(async ({ value }) => {
-    await resetPassword({ id: row.id, newPassword: value })
+    // 调用正确的 API 方法名
+    await resetSchoolPassword({ id: row.id, newPassword: value })
     ElMessage.success('密码重置成功')
   }).catch(() => {})
 }
 
+// ... 回收站逻辑保持不变 ...
 const handleOpenRecycle = async () => {
   recycleVisible.value = true
   recycleLoading.value = true
   try {
     const res = await getDeletedSchoolList()
-    recycleData.value = res.data || []
+    recycleData.value = res.data || [] // 注意：deletedList 接口如果没有分页，直接返回 data 数组
   } catch (e) {
     console.error(e)
   } finally {

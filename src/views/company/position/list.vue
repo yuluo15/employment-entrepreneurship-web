@@ -203,13 +203,23 @@
           <el-input v-model="formData.city" placeholder="请输入工作城市，如：成都" />
         </el-form-item>
 
+<!--        <el-form-item label="学历要求" prop="education">-->
+<!--          <el-select v-model="formData.education" placeholder="请选择学历要求" style="width: 100%">-->
+<!--            <el-option label="不限" value="unlimited" />-->
+<!--            <el-option label="大专" value="college" />-->
+<!--            <el-option label="本科" value="bachelor" />-->
+<!--            <el-option label="硕士" value="master" />-->
+<!--            <el-option label="博士" value="doctor" />-->
+<!--          </el-select>-->
+<!--        </el-form-item>-->
         <el-form-item label="学历要求" prop="education">
           <el-select v-model="formData.education" placeholder="请选择学历要求" style="width: 100%">
-            <el-option label="不限" value="unlimited" />
-            <el-option label="大专" value="college" />
-            <el-option label="本科" value="bachelor" />
-            <el-option label="硕士" value="master" />
-            <el-option label="博士" value="doctor" />
+            <el-option
+                v-for="item in educationOptions"
+                :key="item.dictValue"
+                :label="item.dictLabel"
+                :value="item.dictValue"
+            />
           </el-select>
         </el-form-item>
 
@@ -225,12 +235,28 @@
           </el-select>
         </el-form-item>
 
+<!--        <el-form-item label="职位标签">-->
+<!--          <el-input-->
+<!--            v-model="formData.tags"-->
+<!--            placeholder="请输入职位标签，多个用逗号分隔，如：五险一金,双休,年终奖"-->
+<!--            maxlength="200"-->
+<!--          />-->
+<!--          <div class="text-xs text-gray-400 mt-1">提示：标签可以包括福利待遇、工作特点等</div>-->
+<!--        </el-form-item>-->
         <el-form-item label="职位标签">
-          <el-input
-            v-model="formData.tags"
-            placeholder="请输入职位标签，多个用逗号分隔，如：五险一金,双休,年终奖"
-            maxlength="200"
-          />
+          <el-select
+              v-model="formData.tags"
+              multiple
+              placeholder="请选择职位标签(支持多选)"
+              style="width: 100%"
+          >
+            <el-option
+                v-for="item in welfareOptions"
+                :key="item.dictValue"
+                :label="item.dictLabel"
+                :value="item.dictValue"
+            />
+          </el-select>
           <div class="text-xs text-gray-400 mt-1">提示：标签可以包括福利待遇、工作特点等</div>
         </el-form-item>
 
@@ -281,6 +307,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
+// 在顶部引入处添加字典接口 (请确保路径与你的项目匹配)
+import { getDictDataList } from '@/api/dict'
 import {
   getJobList,
   deleteJob,
@@ -321,13 +349,25 @@ const submitting = ref(false)
 const isEdit = ref(false)
 const editJobId = ref('')
 
-const formData = reactive<JobForm>({
+// const formData = reactive<JobForm>({
+//   jobName: '',
+//   salaryRange: '',
+//   city: '',
+//   education: '',
+//   experience: '',
+//   tags: '',
+//   description: '',
+//   requirement: '',
+//   contactPhone: ''
+// })
+// 将 formData 中 tags 的初始值修改为支持数组
+const formData = reactive<any>({ // 这里如果原先是 JobForm 报错，可暂时用 any 或修改类型声明
   jobName: '',
   salaryRange: '',
   city: '',
   education: '',
   experience: '',
-  tags: '',
+  tags: [] as string[] | string, // <--- 改为数组
   description: '',
   requirement: '',
   contactPhone: ''
@@ -364,6 +404,25 @@ const formRules = {
   ]
 }
 
+// 在变量定义区域添加
+const educationOptions = ref<any[]>([])
+const welfareOptions = ref<any[]>([])
+
+// 获取字典数据方法 (使用 Promise.all 并发请求两个字典)
+const getDicts = async () => {
+  try {
+    const [eduRes, welRes] = await Promise.all([
+      getDictDataList({ pageNum: 1, pageSize: 50, dictType: 'sys_education' }),
+      getDictDataList({ pageNum: 1, pageSize: 50, dictType: 'sys_welfare' })
+    ])
+    // 按 dictSort 升序排列
+    educationOptions.value = (eduRes.data?.data || []).sort((a: any, b: any) => a.dictSort - b.dictSort)
+    welfareOptions.value = (welRes.data?.data || []).sort((a: any, b: any) => a.dictSort - b.dictSort)
+  } catch (error) {
+    console.error('获取字典失败', error)
+  }
+}
+
 // --- 加载列表 ---
 const loadList = async () => {
   loading.value = true
@@ -393,26 +452,20 @@ const handleReset = () => {
   handleQuery()
 }
 
-// --- 新增 ---
+// 1. 修改 handleAdd，将 tags 重置为空数组
 const handleAdd = () => {
   isEdit.value = false
   editJobId.value = ''
   formRef.value?.resetFields()
   Object.assign(formData, {
-    jobName: '',
-    salaryRange: '',
-    city: '',
-    education: '',
-    experience: '',
-    tags: '',
-    description: '',
-    requirement: '',
-    contactPhone: ''
+    jobName: '', salaryRange: '', city: '', education: '', experience: '',
+    tags: [], // <--- 改为空数组
+    description: '', requirement: '', contactPhone: ''
   })
   formDialogVisible.value = true
 }
 
-// --- 编辑 ---
+// 2. 修改 handleEdit，将后端返回的字符串标签转为数组
 const handleEdit = async (row: JobListItem) => {
   isEdit.value = true
   editJobId.value = row.id || row.jobId || ''
@@ -425,7 +478,7 @@ const handleEdit = async (row: JobListItem) => {
       city: data.city,
       education: data.education,
       experience: data.experience,
-      tags: data.tags || '',
+      tags: data.tags ? data.tags.split(',') : [], // <--- 字符串转数组
       description: data.description,
       requirement: data.requirement,
       contactPhone: data.contactPhone
@@ -437,20 +490,28 @@ const handleEdit = async (row: JobListItem) => {
   }
 }
 
-// --- 提交表单 ---
+// 3. 修改 handleFormSubmit，提交前将数组拼接回字符串
 const handleFormSubmit = async () => {
   if (!formRef.value) return
-  
+
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    
+
     submitting.value = true
     try {
+      // 构造提交参数，将数组转回字符串
+      const submitData = { ...formData }
+      if (Array.isArray(submitData.tags)) {
+        submitData.tags = submitData.tags.join(',')
+      }
+
       if (isEdit.value) {
-        await updateJob({ jobId: editJobId.value, ...formData })
+        // 使用 submitData
+        await updateJob({ jobId: editJobId.value, ...submitData })
         ElMessage.success('职位修改成功')
       } else {
-        await addJob(formData)
+        // 使用 submitData
+        await addJob(submitData)
         ElMessage.success('职位发布成功，等待管理员审核')
       }
       formDialogVisible.value = false
@@ -541,7 +602,23 @@ const handleDelete = async (row: JobListItem) => {
 }
 
 // --- 工具函数 ---
+// const getEducationLabel = (education: string) => {
+//   const map: Record<string, string> = {
+//     'unlimited': '不限',
+//     'college': '大专',
+//     'bachelor': '本科',
+//     'master': '硕士',
+//     'doctor': '博士'
+//   }
+//   return map[education] || education
+// }
+// 修改现有的 getEducationLabel 函数，优先从字典读取
 const getEducationLabel = (education: string) => {
+  // 尝试在字典中查找
+  const option = educationOptions.value.find(item => item.dictValue === education)
+  if (option) return option.dictLabel
+
+  // 保留旧版映射以防旧数据不兼容
   const map: Record<string, string> = {
     'unlimited': '不限',
     'college': '大专',
@@ -585,6 +662,7 @@ const getAuditTagType = (audit: number) => {
 
 onMounted(() => {
   loadList()
+  getDicts()
 })
 </script>
 
