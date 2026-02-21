@@ -88,7 +88,7 @@
           <template #default="{ row }">
             <div class="text-xs">
               <div>{{ row.educationLabel }}</div>
-              <div class="text-gray-400">{{ row.experience }}</div>
+              <div class="text-gray-400">{{ getExperienceLabel(row.experience) }}</div>
             </div>
           </template>
         </el-table-column>
@@ -115,11 +115,21 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="状态" width="100" align="center">
+        <el-table-column label="审核状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag v-if="row.audit === 0" type="warning">待审核</el-tag>
             <el-tag v-else-if="row.audit === 1" type="success">已通过</el-tag>
             <el-tag v-else-if="row.audit === 2" type="danger">已驳回</el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="招聘状态" width="100" align="center">
+          <template #default="{ row }">
+            <template v-if="row.audit === 1">
+              <el-tag v-if="row.status === 1" type="primary">招聘中</el-tag>
+              <el-tag v-else-if="row.status === 0" type="info">已下架</el-tag>
+            </template>
+            <span v-else class="text-gray-400">-</span>
           </template>
         </el-table-column>
 
@@ -128,34 +138,43 @@
         <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" :icon="View" @click="handleView(row)">详情</el-button>
-            
-            <el-button 
-              v-if="row.audit === 0" 
-              link 
-              type="success" 
-              :icon="Check" 
-              @click="handleAudit(row, 1)"
+
+            <el-button
+                v-if="row.audit === 0"
+                link
+                type="success"
+                :icon="Check"
+                @click="handleAudit(row, 1)"
             >
               通过
             </el-button>
-            
-            <el-button 
-              v-if="row.audit === 0" 
-              link 
-              type="danger" 
-              :icon="Close" 
-              @click="handleAudit(row, 2)"
+
+            <el-button
+                v-if="row.audit === 0"
+                link
+                type="danger"
+                :icon="Close"
+                @click="handleAudit(row, 2)"
             >
               驳回
             </el-button>
 
-            <el-button 
-              v-if="row.audit === 1" 
-              link 
-              type="warning" 
-              @click="handleOffline(row)"
+            <el-button
+                v-if="row.audit === 1 && row.status === 1"
+                link
+                type="warning"
+                @click="handleOffline(row)"
             >
               下架
+            </el-button>
+
+            <el-button
+                v-if="row.audit === 1 && row.status === 0"
+                link
+                type="info"
+                disabled
+            >
+              已下架
             </el-button>
           </template>
         </el-table-column>
@@ -163,13 +182,13 @@
 
       <div class="mt-4 flex justify-end">
         <el-pagination
-          v-model:current-page="queryParams.pageNum"
-          v-model:page-size="queryParams.pageSize"
-          :page-sizes="[10, 20, 50]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          @size-change="handleQuery"
-          @current-change="handleQuery"
+            v-model:current-page="queryParams.pageNum"
+            v-model:page-size="queryParams.pageSize"
+            :page-sizes="[10, 20, 50]"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            @size-change="handleQuery"
+            @current-change="getList"
         />
       </div>
     </el-card>
@@ -213,10 +232,15 @@
         <el-descriptions :column="2" border class="mb-4">
           <el-descriptions-item label="企业名称">{{ currentJob.companyName }}</el-descriptions-item>
           <el-descriptions-item label="所属行业">{{ currentJob.companyIndustry }}</el-descriptions-item>
+          <el-descriptions-item label="招聘状态">
+            <el-tag v-if="currentJob.status === 1" type="primary" size="small">招聘中</el-tag>
+            <el-tag v-else-if="currentJob.status === 0" type="info" size="small">已下架</el-tag>
+            <span v-else>-</span>
+          </el-descriptions-item>
           <el-descriptions-item label="工作地点">{{ currentJob.city }}</el-descriptions-item>
           <el-descriptions-item label="工作地址">{{ currentJob.location }}</el-descriptions-item>
           <el-descriptions-item label="学历要求">{{ currentJob.educationLabel }}</el-descriptions-item>
-          <el-descriptions-item label="经验要求">{{ currentJob.experience }}</el-descriptions-item>
+          <el-descriptions-item label="经验要求">{{ getExperienceLabel(currentJob.experience) }}</el-descriptions-item>
           <el-descriptions-item label="浏览量">{{ currentJob.viewCount || 0 }}</el-descriptions-item>
           <el-descriptions-item label="发布时间">{{ currentJob.createTime }}</el-descriptions-item>
           <el-descriptions-item label="HR姓名">{{ currentJob.hrName }}</el-descriptions-item>
@@ -296,6 +320,18 @@ const queryParams = reactive<JobQuery>({
 const pendingCount = computed(() => {
   return tableData.value.filter(item => item.audit === 0).length
 })
+// --- 工具函数：经验要求格式化 ---
+const getExperienceLabel = (exp: string | null) => {
+  if (!exp) return '不限经验' // 如果后端传了 null，默认显示为不限经验（或者改为 '-'）
+
+  const map: Record<string, string> = {
+    'fresh': '应届生',
+    'unlimited': '不限经验'
+  }
+
+  // 如果匹配到了就返回中文，匹配不到就返回原字符串
+  return map[exp] || exp
+}
 
 // --- Methods ---
 

@@ -30,7 +30,7 @@
         <van-field
             v-model="form.expectedSalary"
             label="期望薪资"
-            placeholder="例如：8k-12k"
+            placeholder="例如：7000"
             required
         />
         <van-field

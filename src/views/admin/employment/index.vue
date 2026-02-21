@@ -62,7 +62,7 @@
           <div class="flex items-center justify-between">
             <div>
               <div class="text-sm opacity-80 mb-1">平均期望薪资</div>
-              <div class="text-3xl font-bold font-mono">{{ kpiData.avgSalary || 0 }}</div>
+              <div class="text-3xl font-bold font-mono">{{ kpiData.avgSalary || 0 }}k</div>
               <div class="text-xs mt-2">元/月</div>
             </div>
             <el-icon class="text-4xl opacity-30"><Money /></el-icon>
@@ -80,7 +80,7 @@
             <div class="flex justify-between items-center">
               <span class="font-bold text-gray-800 flex items-center">
                 <el-icon class="mr-2 text-blue-500"><Histogram /></el-icon>
-                各校就业率排行榜 (红绿灯监管)
+                各校就业率排行榜
               </span>
               <el-tag type="danger" size="small" v-if="lowSchoolCount > 0">
                 {{ lowSchoolCount }} 所学校低于85%

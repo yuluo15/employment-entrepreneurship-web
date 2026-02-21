@@ -340,17 +340,15 @@
       </el-alert>
 
       <el-upload
-        ref="uploadRef"
-        class="upload-demo"
-        drag
-        :action="uploadAction"
-        :headers="uploadHeaders"
-        :on-success="handleUploadSuccess"
-        :on-error="handleUploadError"
-        :before-upload="beforeUpload"
-        :limit="1"
-        :auto-upload="false"
-        accept=".xlsx,.xls"
+          ref="uploadRef"
+          class="upload-demo"
+          drag
+          action="#"
+          :auto-upload="false"
+          :before-upload="beforeUpload"
+          :limit="1"
+          :on-exceed="handleExceed"
+          v-model:file-list="fileList"   accept=".xlsx,.xls"
       >
         <el-icon class="el-icon--upload"><upload-filled /></el-icon>
         <div class="el-upload__text">
@@ -377,7 +375,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Download, Upload, UploadFilled } from '@element-plus/icons-vue'
-import { getStudentList, getStudentDetail, getStudentResume, exportStudentData, downloadTemplate } from '@/api/school'
+import { getStudentList, getStudentDetail, getStudentResume, exportStudentData, downloadTemplate, importStudents } from '@/api/school'
 import type { StudentListItem, StudentDetail, StudentResume } from '@/api/school'
 import type { UploadInstance } from 'element-plus'
 import { useUserStore } from '@/store/userStore'
@@ -421,15 +419,57 @@ const importVisible = ref(false)
 const uploading = ref(false)
 const uploadRef = ref<UploadInstance>()
 
-// 上传配置
-const uploadAction = computed(() => {
-  return `${import.meta.env.VITE_API_BASE_URL}/school/student/import`
-})
-const uploadHeaders = computed(() => {
-  return {
-    Authorization: `Bearer ${userStore.token}`
+import type { UploadInstance, UploadUserFile, UploadRawFile } from 'element-plus' // 确保顶部引入了 UploadUserFile
+
+// ！！！1. 新增一个响应式变量来专门存放文件列表 ！！！
+const fileList = ref<UploadUserFile[]>([])
+
+// ！！！2. 替换你刚才报错的 submitUpload 方法 ！！！
+const submitUpload = async () => {
+  // 直接通过我们绑定的 fileList 来判断文件是否存在
+  if (fileList.value.length === 0) {
+    ElMessage.warning('请先选择要导入的 Excel 文件')
+    return
   }
-})
+
+  // 取出真正的源文件
+  const rawFile = fileList.value[0].raw
+  if (!rawFile) return
+
+  uploading.value = true
+  try {
+    // 发起 Axios 请求
+    const res = await importStudents(rawFile)
+
+    uploading.value = false
+    importVisible.value = false
+
+    if (res.message === 'success' || res.code === 200) {
+      const { successCount, failCount, failList } = res.data || {}
+
+      if (failCount === 0) {
+        ElMessage.success(`导入成功！共导入 ${successCount} 条学生信息`)
+      } else {
+        ElMessageBox.alert(
+            `成功导入 ${successCount} 条，失败 ${failCount} 条。\n失败原因：\n${failList.map((item: any) => `第${item.row}行：${item.reason}`).join('\n')}`,
+            '导入结果',
+            { type: 'warning' }
+        )
+      }
+
+      loadData()
+      // 清空上传组件和文件列表
+      uploadRef.value?.clearFiles()
+      fileList.value = [] // 同步清空绑定的列表
+    } else {
+      ElMessage.error(res.message || '导入失败')
+    }
+  } catch (error: any) {
+    uploading.value = false
+    console.error('导入异常:', error)
+    ElMessage.error(error.message || '导入失败，请检查文件格式或网络')
+  }
+}
 
 // 加载学生列表
 const loadData = async () => {
@@ -555,47 +595,6 @@ const beforeUpload = (file: File) => {
     return false
   }
   return true
-}
-
-// 提交上传
-const submitUpload = () => {
-  if (!uploadRef.value) return
-  uploading.value = true
-  uploadRef.value.submit()
-}
-
-// 上传成功
-const handleUploadSuccess = (response: any) => {
-  uploading.value = false
-  importVisible.value = false
-  
-  if (response.message === 'success') {
-    const { successCount, failCount, failList } = response.data
-    
-    if (failCount === 0) {
-      ElMessage.success(`导入成功！共导入 ${successCount} 条学生信息`)
-    } else {
-      ElMessageBox.alert(
-        `成功导入 ${successCount} 条，失败 ${failCount} 条。\n失败原因：\n${failList.map((item: any) => `第${item.row}行：${item.reason}`).join('\n')}`,
-        '导入结果',
-        { type: 'warning' }
-      )
-    }
-    
-    // 刷新列表
-    loadData()
-    
-    // 清空上传组件
-    uploadRef.value?.clearFiles()
-  } else {
-    ElMessage.error(response.message || '导入失败')
-  }
-}
-
-// 上传失败
-const handleUploadError = () => {
-  uploading.value = false
-  ElMessage.error('导入失败，请检查文件格式')
 }
 
 onMounted(() => {
