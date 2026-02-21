@@ -140,15 +140,6 @@
             <el-option label="新闻" value="4" />
           </el-select>
         </el-form-item>
-        <el-form-item label="目标受众" prop="targetAudience">
-          <el-radio-group v-model="formData.targetAudience">
-            <el-radio value="school">本校教职工</el-radio>
-            <el-radio value="student">本校学生</el-radio>
-          </el-radio-group>
-          <div class="text-gray-500 text-sm mt-1">
-            选择"本校教职工"仅学校端可见，选择"本校学生"则学生端也可见
-          </div>
-        </el-form-item>
         <el-form-item label="内容" prop="noticeContent">
           <el-input
             v-model="formData.noticeContent"
@@ -254,15 +245,13 @@ const formData = reactive<SchoolNoticeForm>({
   noticeId: '',
   noticeTitle: '',
   noticeType: '',
-  noticeContent: '',
-  targetAudience: 'school'
+  noticeContent: ''
 })
 
 const formRules = {
   noticeTitle: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   noticeType: [{ required: true, message: '请选择类型', trigger: 'change' }],
-  noticeContent: [{ required: true, message: '请输入内容', trigger: 'blur' }],
-  targetAudience: [{ required: true, message: '请选择目标受众', trigger: 'change' }]
+  noticeContent: [{ required: true, message: '请输入内容', trigger: 'blur' }]
 }
 
 // --- 查看详情 ---
@@ -271,8 +260,8 @@ const currentNotice = ref<SchoolNoticeItem | null>(null)
 
 // --- 判断是否为管理员公告 ---
 const isAdminNotice = (row: SchoolNoticeItem) => {
-  // 简单判断：如果 createBy 是 'admin' 或不是当前学校ID，则认为是管理员公告
-  return row.createBy === 'admin' || row.createBy !== userStore.userInfo?.ownerId
+  // 通过 publisherType 判断
+  return row.publisherType === 'admin'
 }
 
 // --- 加载列表 ---
@@ -322,8 +311,7 @@ const handleEdit = (row: SchoolNoticeItem) => {
     noticeId: row.noticeId,
     noticeTitle: row.noticeTitle,
     noticeType: row.noticeType,
-    noticeContent: row.noticeContent,
-    targetAudience: 'school'  // 默认值，实际应从后端获取
+    noticeContent: row.noticeContent
   })
   dialogVisible.value = true
 }
@@ -457,7 +445,6 @@ const resetForm = () => {
   formData.noticeTitle = ''
   formData.noticeType = ''
   formData.noticeContent = ''
-  formData.targetAudience = 'school'
   formRef.value?.clearValidate()
 }
 

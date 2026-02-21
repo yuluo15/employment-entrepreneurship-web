@@ -24,6 +24,9 @@ export interface NoticeItem {
   createTime: string
   updateTime: string
   publishTime?: string
+  publisherType?: string  // 'admin' 或 'school'
+  publisherId?: string
+  targetAudience?: string  // 'all' 或 'student'
 }
 
 // 新增/编辑表单
@@ -34,6 +37,7 @@ export interface NoticeForm {
   noticeContent: string
   isTop: number
   status?: number  // 0:草稿, 1:已发布
+  targetAudience?: string  // 'all' 或 'student'
 }
 
 // --- API 方法 ---

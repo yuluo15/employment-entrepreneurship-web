@@ -286,11 +286,10 @@ const loadNotices = async () => {
 // 获取通知类型标签颜色
 const getNoticeTagType = (type: string) => {
   const map: Record<string, string> = {
-    'ACTIVITY': 'primary',
-    'COMPETITION': 'warning',
-    'LECTURE': 'success',
-    'POLICY': 'danger',
-    'GENERAL': 'default'
+    '1': 'primary',    // 通知
+    '2': 'success',    // 公告
+    '3': 'warning',    // 政策
+    '4': 'default'     // 新闻
   }
   return map[type] || 'default'
 }

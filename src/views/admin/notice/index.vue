@@ -141,6 +141,15 @@
             placeholder="请输入内容"
           />
         </el-form-item>
+        <el-form-item label="目标受众" prop="targetAudience">
+          <el-radio-group v-model="formData.targetAudience">
+            <el-radio value="all">全部用户</el-radio>
+            <el-radio value="student">学生</el-radio>
+          </el-radio-group>
+          <div class="text-gray-500 text-sm mt-1">
+            选择"全部用户"所有学校和学生可见，选择"学生"仅学生可见
+          </div>
+        </el-form-item>
         <el-form-item label="是否置顶">
           <el-switch v-model="formData.isTop" :active-value="1" :inactive-value="0" />
         </el-form-item>
@@ -234,13 +243,15 @@ const formData = reactive<NoticeForm>({
   noticeTitle: '',
   noticeType: '',
   noticeContent: '',
-  isTop: 0
+  isTop: 0,
+  targetAudience: 'student'
 })
 
 const formRules = {
   noticeTitle: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   noticeType: [{ required: true, message: '请选择类型', trigger: 'change' }],
-  noticeContent: [{ required: true, message: '请输入内容', trigger: 'blur' }]
+  noticeContent: [{ required: true, message: '请输入内容', trigger: 'blur' }],
+  targetAudience: [{ required: true, message: '请选择目标受众', trigger: 'change' }]
 }
 
 // --- 查看详情 ---
@@ -292,7 +303,8 @@ const handleEdit = (row: NoticeItem) => {
     noticeTitle: row.noticeTitle,
     noticeType: row.noticeType,
     noticeContent: row.noticeContent,
-    isTop: row.isTop
+    isTop: row.isTop,
+    targetAudience: row.targetAudience || 'student'
   })
   dialogVisible.value = true
 }
@@ -427,6 +439,7 @@ const resetForm = () => {
   formData.noticeType = ''
   formData.noticeContent = ''
   formData.isTop = 0
+  formData.targetAudience = 'student'
   formRef.value?.clearValidate()
 }
 

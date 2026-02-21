@@ -584,6 +584,9 @@ export interface SchoolNoticeItem {
   createTime: string
   updateTime: string
   publishTime?: string
+  publisherType?: string  // 'admin' 或 'school' - 用于判断是否为管理员公告
+  publisherId?: string  // 发布者ID（学校ID或NULL）
+  targetAudience?: string  // 'all' 或 'student' - 目标受众
 }
 
 // 通知表单
@@ -592,7 +595,6 @@ export interface SchoolNoticeForm {
   noticeTitle: string
   noticeType: string
   noticeContent: string
-  targetAudience: string  // school=本校教职工, student=本校学生
   status?: number  // 0=草稿, 1=已发布
 }
 
