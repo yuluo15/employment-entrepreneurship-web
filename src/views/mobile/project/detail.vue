@@ -73,9 +73,16 @@
           <div class="bg-[#fff7ed] p-3 rounded-lg text-sm text-[#c2410c] leading-relaxed mb-3">
             {{ detail.needs }}
           </div>
-          <van-button block round color="linear-gradient(to right, #ff6034, #ee0a24)" size="small" @click="contactLeader">
-            <template #icon><van-icon name="chat-o" /></template>
-            联系负责人
+          <van-button 
+            block 
+            round 
+            :color="contactButtonConfig.color"
+            size="small" 
+            :disabled="contactButtonConfig.disabled"
+            @click="contactLeader"
+          >
+            <template #icon><van-icon :name="contactButtonConfig.icon" /></template>
+            {{ contactButtonConfig.text }}
           </van-button>
         </div>
       </div>
@@ -182,6 +189,47 @@ const handleCollect = async () => {
 }
 
 const contactLeader = () => {
+  // 如果是项目负责人，可以直接查看
+  if (detail.value.isOwner) {
+    if (!detail.value.leaderPhone) {
+      showToast('负责人未公开联系方式')
+      return
+    }
+    
+    showDialog({
+      title: '负责人联系方式',
+      message: `姓名：${detail.value.leaderName}\n手机：${detail.value.leaderPhone}\n\n温馨提示：请礼貌沟通，说明来意`,
+      confirmButtonText: '复制手机号',
+      cancelButtonText: '关闭',
+      closeOnClickOverlay: true
+    }).then(() => {
+      copyPhoneToClipboard()
+    }).catch(() => {
+      // 用户点击取消，不做任何操作
+    })
+    return
+  }
+  
+  // 检查申请状态
+  if (detail.value.applicationStatus !== 'APPROVED') {
+    let message = '您需要先申请加入项目，并等待审核通过后才能查看负责人联系方式'
+    
+    if (detail.value.applicationStatus === 'PENDING') {
+      message = '您的申请正在审核中，审核通过后即可查看负责人联系方式'
+    } else if (detail.value.applicationStatus === 'REJECTED') {
+      message = '您的申请未通过，暂时无法查看负责人联系方式'
+    }
+    
+    showDialog({
+      title: '提示',
+      message: message,
+      confirmButtonText: '我知道了',
+      showCancelButton: false
+    })
+    return
+  }
+  
+  // 申请已通过，可以查看联系方式
   if (!detail.value.leaderPhone) {
     showToast('负责人未公开联系方式')
     return
@@ -194,23 +242,27 @@ const contactLeader = () => {
     cancelButtonText: '关闭',
     closeOnClickOverlay: true
   }).then(() => {
-    // 复制手机号到剪贴板
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(detail.value.leaderPhone || '')
-      showToast('已复制到剪贴板')
-    } else {
-      // 兼容方案
-      const input = document.createElement('input')
-      input.value = detail.value.leaderPhone || ''
-      document.body.appendChild(input)
-      input.select()
-      document.execCommand('copy')
-      document.body.removeChild(input)
-      showToast('已复制到剪贴板')
-    }
+    copyPhoneToClipboard()
   }).catch(() => {
     // 用户点击取消，不做任何操作
   })
+}
+
+// 复制手机号到剪贴板
+const copyPhoneToClipboard = () => {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(detail.value.leaderPhone || '')
+    showToast('已复制到剪贴板')
+  } else {
+    // 兼容方案
+    const input = document.createElement('input')
+    input.value = detail.value.leaderPhone || ''
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    document.body.removeChild(input)
+    showToast('已复制到剪贴板')
+  }
 }
 
 // 按钮配置
@@ -228,6 +280,55 @@ const buttonConfig = computed(() => {
       return { text: '申请未通过', disabled: true, color: '#f44336' }
     default:
       return { text: '申请加入项目', disabled: false, color: '#7c3aed' }
+  }
+})
+
+// 联系负责人按钮配置
+const contactButtonConfig = computed(() => {
+  // 如果是项目负责人，可以直接联系
+  if (detail.value.isOwner) {
+    return {
+      text: '联系负责人',
+      icon: 'chat-o',
+      color: 'linear-gradient(to right, #ff6034, #ee0a24)',
+      disabled: false
+    }
+  }
+  
+  // 根据申请状态显示不同的按钮样式
+  switch (detail.value.applicationStatus) {
+    case 'APPROVED':
+      // 已通过，可以联系
+      return {
+        text: '联系负责人',
+        icon: 'chat-o',
+        color: 'linear-gradient(to right, #ff6034, #ee0a24)',
+        disabled: false
+      }
+    case 'PENDING':
+      // 审核中，不能联系
+      return {
+        text: '审核通过后可联系',
+        icon: 'clock-o',
+        color: '#ff9800',
+        disabled: true
+      }
+    case 'REJECTED':
+      // 已拒绝，不能联系
+      return {
+        text: '申请未通过',
+        icon: 'cross',
+        color: '#999',
+        disabled: true
+      }
+    default:
+      // 未申请，不能联系
+      return {
+        text: '申请通过后可联系',
+        icon: 'lock',
+        color: '#999',
+        disabled: true
+      }
   }
 })
 

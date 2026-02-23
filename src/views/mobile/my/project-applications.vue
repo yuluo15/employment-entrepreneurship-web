@@ -255,7 +255,6 @@ const onTabChange = () => {
   pageNum.value = 1
   finished.value = false
   list.value = []
-  loading.value = true
   onLoad()
 }
 

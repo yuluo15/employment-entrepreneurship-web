@@ -156,21 +156,21 @@
     </el-row>
 
     <!-- 各学院数据概览 -->
-    <el-row :gutter="20" class="mb-4">
-      <el-col :span="24">
-        <el-card shadow="never" v-loading="loading">
-          <template #header>
-            <div class="flex justify-between items-center">
-              <span class="font-bold">各学院就业情况</span>
-              <el-button text type="primary" @click="router.push('/school/statistics/employment')">
-                查看详情
-              </el-button>
-            </div>
-          </template>
-          <div ref="collegeChartRef" style="height: 300px;"></div>
-        </el-card>
-      </el-col>
-    </el-row>
+<!--    <el-row :gutter="20" class="mb-4">-->
+<!--      <el-col :span="24">-->
+<!--        <el-card shadow="never" v-loading="loading">-->
+<!--          <template #header>-->
+<!--            <div class="flex justify-between items-center">-->
+<!--              <span class="font-bold">各学院就业情况</span>-->
+<!--              <el-button text type="primary" @click="router.push('/school/statistics/employment')">-->
+<!--                查看详情-->
+<!--              </el-button>-->
+<!--            </div>-->
+<!--          </template>-->
+<!--          <div ref="collegeChartRef" style="height: 300px;"></div>-->
+<!--        </el-card>-->
+<!--      </el-col>-->
+<!--    </el-row>-->
 
     <!-- 快捷入口 -->
     <el-card shadow="never">
