@@ -10,7 +10,7 @@ export interface StudentProfileVo {
     deliveredCount: number
     interviewCount: number
     collectionCount: number
-    viewCount: number
+    offerCount: number
 
     resumeComplete: number
     resumeId: string | null

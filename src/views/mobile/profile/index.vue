@@ -61,7 +61,7 @@
 
         <van-grid-item to="/student/my/offer">
           <template #icon>
-            <span class="text-xl font-bold text-gray-800 font-mono">{{ profile.viewCount || 0 }}</span>
+            <span class="text-xl font-bold text-gray-800 font-mono">{{ profile.offerCount || 0 }}</span>
           </template>
           <template #text>
             <span class="text-xs text-gray-500 mt-1">Offer</span>
