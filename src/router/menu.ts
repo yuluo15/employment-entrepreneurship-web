@@ -353,7 +353,21 @@ const studentMenu: RouteRecordRaw[] = [
     meta: { title: '申请列表', hideNavBar: false, hideTabBar: true },
     component: () => import('@/views/mobile/my/project-applications.vue')
   },
-  // [新增] 个人信息编辑
+  // [新增] 消息通知列表
+  {
+    path: 'my/messages',
+    name: 'MyMessages',
+    meta: { title: '消息通知', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/my/messages.vue')
+  },
+  // [新增] 消息详情
+  {
+    path: 'my/messages/:id',
+    name: 'MessageDetail',
+    meta: { title: '消息详情', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/my/message-detail.vue')
+  },
+  // [新增] 个人信心编辑
   {
     path: 'profile/info',
     name: 'ProfileInfo',

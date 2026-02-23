@@ -124,6 +124,23 @@
       </div>
 
       <div class="bg-white rounded-xl overflow-hidden shadow-sm">
+        <van-cell title="消息通知" is-link to="/student/my/messages" center>
+          <template #icon>
+            <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center mr-3">
+              <van-icon name="bell" class="text-red-500" size="18" />
+            </div>
+          </template>
+          <template #value>
+            <van-badge 
+              v-if="unreadCount > 0" 
+              :content="unreadCount > 99 ? '99+' : unreadCount" 
+              max="99"
+            />
+          </template>
+        </van-cell>
+      </div>
+
+      <div class="bg-white rounded-xl overflow-hidden shadow-sm">
         <van-cell title="账号与安全" is-link center to="/student/settings/account">
           <template #icon>
             <div class="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center mr-3">
@@ -147,6 +164,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { getProfileSummary, type StudentProfileVo } from '@/api/mobile/profile'
+import { getUnreadCount } from '@/api/mobile/message'
 import { useUserStore } from '@/store/userStore' // 引入
 
 const userStore = useUserStore() // 实例化
@@ -156,6 +174,9 @@ const showResumePreview = ref(false)
 
 // 响应式数据，默认为空对象
 const profile = ref<Partial<StudentProfileVo>>({})
+
+// 未读消息数量
+const unreadCount = ref(0)
 
 const resumeColor = computed(() => {
   const score = profile.value.resumeComplete || 0
@@ -181,7 +202,20 @@ onMounted(async () => {
   } catch (error) {
     console.error('获取个人信息失败', error)
   }
+
+  // 加载未读消息数量
+  loadUnreadCount()
 })
+
+// 加载未读消息数量
+const loadUnreadCount = async () => {
+  try {
+    const res = await getUnreadCount()
+    unreadCount.value = res.data.total
+  } catch (error) {
+    console.error('获取未读消息数量失败', error)
+  }
+}
 
 const toEditProfile = () => {
   // 修改为真实的路由路径
