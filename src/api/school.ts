@@ -252,6 +252,13 @@ export function getEmploymentStats(params: EmploymentQuery) {
   return request.get<any, { data: EmploymentStats }>('/school/employment/stats', { params: cleanParams })
 }
 
+/**
+ * 导出就业数据
+ */
+export function exportEmploymentData(params: EmploymentQuery) {
+  return request.get('/school/employment/export', { params, responseType: 'blob' })
+}
+
 // --- 教师档案管理 ---
 
 // 教师查询参数
@@ -326,6 +333,13 @@ export function importTeachers(file: File) {
   return request.post('/school/teacher/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
+}
+
+/**
+ * 导出教师数据
+ */
+export function exportTeacherData(params: TeacherQuery) {
+  return request.get('/school/teacher/export', { params, responseType: 'blob' })
 }
 
 // --- 指导记录管理 ---

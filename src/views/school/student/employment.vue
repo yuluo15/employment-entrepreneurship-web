@@ -79,7 +79,7 @@
 
       <!-- 操作按钮 -->
       <div class="mb-4">
-        <el-button type="success" @click="handleExport">
+        <el-button type="success" @click="handleExport" :loading="exportLoading">
           <el-icon class="mr-1"><Download /></el-icon>
           导出就业数据
         </el-button>
@@ -132,9 +132,9 @@
         </el-table-column>
         <el-table-column label="操作" width="150" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="handleEdit(row)">
-              编辑
-            </el-button>
+<!--            <el-button link type="primary" size="small" @click="handleEdit(row)">-->
+<!--              编辑-->
+<!--            </el-button>-->
             <el-button link type="primary" size="small" @click="handleView(row)">
               详情
             </el-button>
@@ -267,7 +267,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Download, User, Briefcase } from '@element-plus/icons-vue'
-import { getEmploymentList, getEmploymentDetail, updateEmploymentInfo, getEmploymentStats } from '@/api/school'
+import { getEmploymentList, getEmploymentDetail, updateEmploymentInfo, getEmploymentStats, exportEmploymentData } from '@/api/school'
 import type { EmploymentListItem, EmploymentDetail, EmploymentForm } from '@/api/school'
 import type { FormInstance, FormRules } from 'element-plus'
 
@@ -348,6 +348,9 @@ const formRules = computed<FormRules>(() => {
 // 详情对话框
 const detailVisible = ref(false)
 const currentDetail = ref<EmploymentDetail | null>(null)
+
+// 导出状态控制
+const exportLoading = ref(false)
 
 // 加载统计数据
 const loadStats = async () => {
@@ -455,12 +458,40 @@ const handleView = async (row: EmploymentListItem) => {
 const handleExport = async () => {
   try {
     await ElMessageBox.confirm('确认导出当前筛选条件下的就业数据？', '提示', {
-      type: 'warning'
+      type: 'warning',
+      confirmButtonText: '确认导出',
+      cancelButtonText: '取消'
     })
-    ElMessage.success('导出功能开发中...')
-    // TODO: 实现导出功能
-  } catch (error) {
-    // 用户取消
+
+    exportLoading.value = true
+
+    const res = await exportEmploymentData(queryParams)
+
+    const blob = new Blob([res as any], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    })
+
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.style.display = 'none'
+    link.href = url
+    const fileName = `就业数据导出_${new Date().getTime()}.xlsx`
+    link.setAttribute('download', fileName)
+
+    document.body.appendChild(link)
+    link.click()
+
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+
+    ElMessage.success('导出成功')
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('导出失败', error)
+      ElMessage.error('导出失败，请检查网络或联系管理员')
+    }
+  } finally {
+    exportLoading.value = false
   }
 }
 

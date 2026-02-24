@@ -63,7 +63,7 @@
             下载模板
           </el-button>
         </div>
-        <el-button type="success" @click="handleExport">
+        <el-button type="success" @click="handleExport" :loading="exportLoading">
           <el-icon class="mr-1"><Download /></el-icon>
           导出数据
         </el-button>
@@ -223,7 +223,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Download, Upload, UploadFilled } from '@element-plus/icons-vue'
-import { getTeacherList, getTeacherDetail, downloadTeacherTemplate, importTeachers } from '@/api/school'
+import { getTeacherList, getTeacherDetail, downloadTeacherTemplate, importTeachers, exportTeacherData } from '@/api/school'
 import type { TeacherListItem, TeacherDetail } from '@/api/school'
 import type { UploadInstance } from 'element-plus'
 import { useUserStore } from '@/store/userStore'
@@ -253,6 +253,9 @@ const currentTeacher = ref<TeacherDetail | null>(null)
 const importVisible = ref(false)
 const uploading = ref(false)
 const uploadRef = ref<UploadInstance>()
+
+// 导出状态控制
+const exportLoading = ref(false)
 
 
 // 加载教师列表
@@ -403,11 +406,40 @@ const handleUploadError = () => {
 const handleExport = async () => {
   try {
     await ElMessageBox.confirm('确认导出当前筛选条件下的教师数据？', '提示', {
-      type: 'warning'
+      type: 'warning',
+      confirmButtonText: '确认导出',
+      cancelButtonText: '取消'
     })
-    ElMessage.success('导出功能开发中...')
-  } catch (error) {
-    // 用户取消
+
+    exportLoading.value = true
+
+    const res = await exportTeacherData(queryParams)
+
+    const blob = new Blob([res as any], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    })
+
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.style.display = 'none'
+    link.href = url
+    const fileName = `教师数据导出_${new Date().getTime()}.xlsx`
+    link.setAttribute('download', fileName)
+
+    document.body.appendChild(link)
+    link.click()
+
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+
+    ElMessage.success('导出成功')
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('导出失败', error)
+      ElMessage.error('导出失败，请检查网络或联系管理员')
+    }
+  } finally {
+    exportLoading.value = false
   }
 }
 

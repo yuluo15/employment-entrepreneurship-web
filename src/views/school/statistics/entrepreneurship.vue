@@ -1,23 +1,23 @@
 <template>
   <div class="app-container">
     <!-- 顶部筛选 -->
-<!--    <el-card shadow="never" class="mb-4">-->
-<!--      <el-form :inline="true">-->
-<!--        <el-form-item label="学院">-->
-<!--          <el-select v-model="selectedCollege" placeholder="全部学院" clearable style="width: 180px" @change="loadData">-->
-<!--            <el-option-->
-<!--              v-for="college in collegeList"-->
-<!--              :key="college"-->
-<!--              :label="college"-->
-<!--              :value="college"-->
-<!--            />-->
-<!--          </el-select>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item>-->
-<!--          <el-button type="primary" :icon="Refresh" @click="loadData">刷新数据</el-button>-->
-<!--        </el-form-item>-->
-<!--      </el-form>-->
-<!--    </el-card>-->
+    <el-card shadow="never" class="mb-4">
+      <el-form :inline="true">
+        <el-form-item label="学院">
+          <el-select v-model="selectedCollege" placeholder="全部学院" clearable style="width: 180px" @change="loadData">
+            <el-option
+              v-for="college in collegeList"
+              :key="college"
+              :label="college"
+              :value="college"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :icon="Refresh" @click="loadData">刷新数据</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
 
     <!-- KPI卡片 -->
     <el-row :gutter="20" class="mb-4">
