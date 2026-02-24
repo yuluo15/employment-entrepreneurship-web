@@ -95,11 +95,11 @@
             <el-tag type="success" size="small">{{ row.guidanceCount || 0 }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="ratingScore" label="评分" width="80" align="center">
-          <template #default="{ row }">
-            <el-rate v-model="row.ratingScore" disabled show-score text-color="#ff9900" score-template="{value}" />
-          </template>
-        </el-table-column>
+<!--        <el-table-column prop="ratingScore" label="评分" width="80" align="center">-->
+<!--          <template #default="{ row }">-->
+<!--            <el-rate v-model="row.ratingScore" disabled show-score text-color="#ff9900" score-template="{value}" />-->
+<!--          </template>-->
+<!--        </el-table-column>-->
         <el-table-column prop="phone" label="联系电话" width="120" />
         <el-table-column label="操作" width="120" align="center" fixed="right">
           <template #default="{ row }">
@@ -143,9 +143,9 @@
         <el-descriptions-item label="学院">{{ currentTeacher.collegeName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="专业领域">{{ currentTeacher.expertise || '-' }}</el-descriptions-item>
         <el-descriptions-item label="指导项目数">{{ currentTeacher.guidanceCount || 0 }}</el-descriptions-item>
-        <el-descriptions-item label="评分">
-          <el-rate v-model="currentTeacher.ratingScore" disabled show-score />
-        </el-descriptions-item>
+<!--        <el-descriptions-item label="评分">-->
+<!--          <el-rate v-model="currentTeacher.ratingScore" disabled show-score />-->
+<!--        </el-descriptions-item>-->
         <el-descriptions-item label="联系电话">{{ currentTeacher.phone || '-' }}</el-descriptions-item>
         <el-descriptions-item label="邮箱">{{ currentTeacher.email || '-' }}</el-descriptions-item>
         <el-descriptions-item label="个人简介" :span="2">
@@ -186,17 +186,17 @@
       </el-alert>
 
       <el-upload
-        ref="uploadRef"
-        class="upload-demo"
-        drag
-        :action="uploadAction"
-        :headers="uploadHeaders"
-        :on-success="handleUploadSuccess"
-        :on-error="handleUploadError"
-        :before-upload="beforeUpload"
-        :limit="1"
-        :auto-upload="false"
-        accept=".xlsx,.xls"
+          ref="uploadRef"
+          class="upload-demo"
+          drag
+          action="#"
+          :http-request="customUpload"
+          :on-success="handleUploadSuccess"
+          :on-error="handleUploadError"
+          :before-upload="beforeUpload"
+          :limit="1"
+          :auto-upload="false"
+          accept=".xlsx,.xls"
       >
         <el-icon class="el-icon--upload"><upload-filled /></el-icon>
         <div class="el-upload__text">
@@ -223,7 +223,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Download, Upload, UploadFilled } from '@element-plus/icons-vue'
-import { getTeacherList, getTeacherDetail, downloadTeacherTemplate } from '@/api/school'
+import { getTeacherList, getTeacherDetail, downloadTeacherTemplate, importTeachers } from '@/api/school'
 import type { TeacherListItem, TeacherDetail } from '@/api/school'
 import type { UploadInstance } from 'element-plus'
 import { useUserStore } from '@/store/userStore'
@@ -254,15 +254,6 @@ const importVisible = ref(false)
 const uploading = ref(false)
 const uploadRef = ref<UploadInstance>()
 
-// 上传配置
-const uploadAction = computed(() => {
-  return `${import.meta.env.VITE_API_BASE_URL}/school/teacher/import`
-})
-const uploadHeaders = computed(() => {
-  return {
-    Authorization: `Bearer ${userStore.token}`
-  }
-})
 
 // 加载教师列表
 const loadData = async () => {
@@ -351,8 +342,26 @@ const beforeUpload = (file: File) => {
   }
   return true
 }
+// 3. 新增自定义上传逻辑
+const customUpload = async (options: any) => {
+  try {
+    const res = await importTeachers(options.file)
 
-// 提交上传
+    // 核心修复：兼容不同的 Axios 拦截器配置，准确找到后端的 JSON 响应体
+    let responseData = res
+    // 如果 res 包含 data，且 data 里面有 message，说明是标准的 Axios 外壳，需要剥离一层
+    if (res.data && res.data.message) {
+      responseData = res.data
+    }
+
+    // 将正确的 JSON 对象传给 el-upload
+    options.onSuccess(responseData)
+  } catch (error: any) {
+    options.onError(error)
+  }
+}
+
+// 提交上传 (这部分保持你原来的不变即可，点击按钮触发 submit，submit 会调用我们上面写的 customUpload)
 const submitUpload = () => {
   if (!uploadRef.value) return
   uploading.value = true

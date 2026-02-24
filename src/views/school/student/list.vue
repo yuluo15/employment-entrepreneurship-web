@@ -56,13 +56,13 @@
         </el-form-item>
         <el-form-item label="就业状态">
           <el-select
-            v-model="queryParams.employmentStatus"
-            placeholder="请选择就业状态"
-            clearable
-            style="width: 150px"
+              v-model="queryParams.employmentStatus"
+              placeholder="请选择就业状态"
+              clearable
+              style="width: 150px"
           >
-            <el-option label="待就业" value="0" />
-            <el-option label="已就业" value="1" />
+            <el-option label="待就业" value="UNEMPLOYED" />
+            <el-option label="已签约" value="SIGNED" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -89,7 +89,7 @@
             下载模板
           </el-button>
         </div>
-        <el-button type="success" @click="handleExport">
+        <el-button type="success" @click="handleExport" :loading="exportLoading">
           <el-icon class="mr-1"><Download /></el-icon>
           导出数据
         </el-button>
@@ -134,8 +134,8 @@
         </el-table-column>
         <el-table-column prop="employmentStatus" label="就业状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.employmentStatus === '0'" type="info" size="small">待就业</el-tag>
-            <el-tag v-else-if="row.employmentStatus === '1'" type="success" size="small">已就业</el-tag>
+            <el-tag v-if="row.employmentStatus === 'UNEMPLOYED'" type="info" size="small">待就业</el-tag>
+            <el-tag v-else-if="row.employmentStatus === 'SIGNED'" type="success" size="small">已签约</el-tag>
             <span v-else>-</span>
           </template>
         </el-table-column>
@@ -192,8 +192,8 @@
           {{ currentStudent.graduationYear ? `${currentStudent.graduationYear}年` : '-' }}
         </el-descriptions-item>
         <el-descriptions-item label="就业状态">
-          <el-tag v-if="currentStudent.employmentStatus === '0'" type="info" size="small">待就业</el-tag>
-          <el-tag v-else-if="currentStudent.employmentStatus === '1'" type="success" size="small">已就业</el-tag>
+          <el-tag v-if="currentStudent.employmentStatus === 'UNEMPLOYED'" type="info" size="small">待就业</el-tag>
+          <el-tag v-else-if="currentStudent.employmentStatus === 'SIGNED'" type="success" size="small">已签约</el-tag>
           <el-tag v-else-if="currentStudent.employmentStatus === '2'" type="primary" size="small">升学</el-tag>
           <el-tag v-else-if="currentStudent.employmentStatus === '3'" type="warning" size="small">出国</el-tag>
           <el-tag v-else-if="currentStudent.employmentStatus === '4'" type="danger" size="small">创业</el-tag>
@@ -332,7 +332,7 @@
             <p>1. 请先下载导入模板，按照模板格式填写学生信息</p>
             <p>2. 必填字段：学号、姓名、性别、学院、专业、入学年份、毕业年份</p>
             <p>3. 性别填写：男 或 女</p>
-            <p>4. 学历填写：专科、本科、硕士、博士</p>
+            <p>4. 学历填写：专科、本科、硕士</p>
             <p>5. 系统会自动为每个学生创建账号，初始密码为：123456</p>
             <p>6. 如果学号已存在，将跳过该条记录</p>
           </div>
@@ -541,16 +541,57 @@ const handleViewResume = async (row: StudentListItem) => {
 }
 
 // 导出数据
+// 导出状态控制
+const exportLoading = ref(false)
+
+// 导出数据
 const handleExport = async () => {
   try {
     await ElMessageBox.confirm('确认导出当前筛选条件下的学生数据？', '提示', {
-      type: 'warning'
+      type: 'warning',
+      confirmButtonText: '确认导出',
+      cancelButtonText: '取消'
     })
-    ElMessage.success('导出功能开发中...')
-    // TODO: 实现导出功能
-    // const res = await exportStudentData(queryParams)
-  } catch (error) {
-    // 用户取消
+
+    exportLoading.value = true
+
+    // 1. 发起请求获取 Blob 数据流，传入当前的查询参数
+    const res = await exportStudentData(queryParams)
+
+    // 2. 将响应数据转换为 Blob 对象
+    // 注意：这里的 [res] 或者 [res.data] 取决于你的 axios 响应拦截器
+    // 如果你在拦截器里直接返回了 response.data，这里写 [res] 即可（与你的 downloadTemplate 保持一致）
+    const blob = new Blob([res as any], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    })
+
+    // 3. 生成可下载的 URL
+    const url = window.URL.createObjectURL(blob)
+
+    // 4. 动态创建 <a> 标签触发下载
+    const link = document.createElement('a')
+    link.style.display = 'none'
+    link.href = url
+    // 可以拼接当前时间戳让每次导出的文件名都不一样
+    const fileName = `学生数据导出_${new Date().getTime()}.xlsx`
+    link.setAttribute('download', fileName)
+
+    document.body.appendChild(link)
+    link.click()
+
+    // 5. 释放内存与清理 DOM
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+
+    ElMessage.success('导出成功')
+  } catch (error: any) {
+    // 过滤掉用户点击取消触发的 catch
+    if (error !== 'cancel') {
+      console.error('导出失败', error)
+      ElMessage.error('导出失败，请检查网络或联系管理员')
+    }
+  } finally {
+    exportLoading.value = false
   }
 }
 

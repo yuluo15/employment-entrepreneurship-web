@@ -1,23 +1,23 @@
 <template>
   <div class="app-container">
     <!-- 顶部筛选 -->
-    <el-card shadow="never" class="mb-4">
-      <el-form :inline="true">
-        <el-form-item label="学院">
-          <el-select v-model="selectedCollege" placeholder="全部学院" clearable style="width: 180px" @change="loadData">
-            <el-option
-              v-for="college in collegeList"
-              :key="college"
-              :label="college"
-              :value="college"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="Refresh" @click="loadData">刷新数据</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+<!--    <el-card shadow="never" class="mb-4">-->
+<!--      <el-form :inline="true">-->
+<!--        <el-form-item label="学院">-->
+<!--          <el-select v-model="selectedCollege" placeholder="全部学院" clearable style="width: 180px" @change="loadData">-->
+<!--            <el-option-->
+<!--              v-for="college in collegeList"-->
+<!--              :key="college"-->
+<!--              :label="college"-->
+<!--              :value="college"-->
+<!--            />-->
+<!--          </el-select>-->
+<!--        </el-form-item>-->
+<!--        <el-form-item>-->
+<!--          <el-button type="primary" :icon="Refresh" @click="loadData">刷新数据</el-button>-->
+<!--        </el-form-item>-->
+<!--      </el-form>-->
+<!--    </el-card>-->
 
     <!-- KPI卡片 -->
     <el-row :gutter="20" class="mb-4">
@@ -77,17 +77,17 @@
     <!-- 中间图表区域 -->
     <el-row :gutter="20" class="mb-4">
       <!-- 各学院项目数量 -->
-      <el-col :span="12">
-        <el-card shadow="never" class="h-full" v-loading="loading">
-          <template #header>
-            <span class="font-bold text-gray-800 flex items-center">
-              <el-icon class="mr-2 text-blue-500"><School /></el-icon>
-              各学院项目数量
-            </span>
-          </template>
-          <div ref="collegeChartRef" style="height: 350px;"></div>
-        </el-card>
-      </el-col>
+<!--      <el-col :span="12">-->
+<!--        <el-card shadow="never" class="h-full" v-loading="loading">-->
+<!--          <template #header>-->
+<!--            <span class="font-bold text-gray-800 flex items-center">-->
+<!--              <el-icon class="mr-2 text-blue-500"><School /></el-icon>-->
+<!--              各学院项目数量-->
+<!--            </span>-->
+<!--          </template>-->
+<!--          <div ref="collegeChartRef" style="height: 350px;"></div>-->
+<!--        </el-card>-->
+<!--      </el-col>-->
 
       <!-- 项目状态分布 -->
       <el-col :span="12">

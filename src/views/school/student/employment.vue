@@ -23,13 +23,13 @@
         </el-form-item>
         <el-form-item label="就业状态">
           <el-select
-            v-model="queryParams.employmentStatus"
-            placeholder="请选择就业状态"
-            clearable
-            style="width: 150px"
+              v-model="queryParams.employmentStatus"
+              placeholder="请选择就业状态"
+              clearable
+              style="width: 150px"
           >
-            <el-option label="待就业" value="0" />
-            <el-option label="已就业" value="1" />
+            <el-option label="待就业" value="UNEMPLOYED" />
+            <el-option label="已签约" value="SIGNED" />
           </el-select>
         </el-form-item>
         <el-form-item label="毕业年份">
@@ -105,8 +105,8 @@
         </el-table-column>
         <el-table-column prop="employmentStatus" label="就业状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.employmentStatus === '0'" type="info" size="small">待就业</el-tag>
-            <el-tag v-else-if="row.employmentStatus === '1'" type="success" size="small">已就业</el-tag>
+            <el-tag v-if="row.employmentStatus === 'UNEMPLOYED'" type="info" size="small">待就业</el-tag>
+            <el-tag v-else-if="row.employmentStatus === 'SIGNED'" type="success" size="small">已签约</el-tag>
             <span v-else>-</span>
           </template>
         </el-table-column>
@@ -176,13 +176,13 @@
         </el-form-item>
         <el-form-item label="就业状态" prop="employmentStatus">
           <el-radio-group v-model="formData.employmentStatus">
-            <el-radio label="0">待就业</el-radio>
-            <el-radio label="1">已就业</el-radio>
+            <el-radio label="UNEMPLOYED">待就业</el-radio>
+            <el-radio label="SIGNED">已签约</el-radio>
           </el-radio-group>
         </el-form-item>
 
         <!-- 已就业时显示 -->
-        <template v-if="formData.employmentStatus === '1'">
+        <template v-if="formData.employmentStatus === 'SIGNED'">
           <el-form-item label="就业单位" prop="companyName">
             <el-input v-model="formData.companyName" placeholder="请输入就业单位" />
           </el-form-item>
@@ -240,12 +240,12 @@
           {{ currentDetail.graduationYear ? `${currentDetail.graduationYear}年` : '-' }}
         </el-descriptions-item>
         <el-descriptions-item label="就业状态">
-          <el-tag v-if="currentDetail.employmentStatus === '0'" type="info" size="small">待就业</el-tag>
-          <el-tag v-else-if="currentDetail.employmentStatus === '1'" type="success" size="small">已就业</el-tag>
+          <el-tag v-if="currentDetail.employmentStatus === 'UNEMPLOYED'" type="info" size="small">待就业</el-tag>
+          <el-tag v-else-if="currentDetail.employmentStatus === 'SIGNED'" type="success" size="small">已签约</el-tag>
         </el-descriptions-item>
 
         <!-- 已就业详情 -->
-        <template v-if="currentDetail.employmentStatus === '1'">
+        <template v-if="currentDetail.employmentStatus === 'SIGNED'">
           <el-descriptions-item label="就业单位">{{ currentDetail.companyName || '-' }}</el-descriptions-item>
           <el-descriptions-item label="职位">{{ currentDetail.position || '-' }}</el-descriptions-item>
           <el-descriptions-item label="薪资">{{ currentDetail.salary || '-' }}</el-descriptions-item>
@@ -321,7 +321,7 @@ const formData = reactive<EmploymentForm>({
   studentName: '',
   studentNo: '',
   majorName: '',
-  employmentStatus: '0',
+  employmentStatus: 'UNEMPLOYED',
   companyName: '',
   position: '',
   salary: '',
@@ -337,7 +337,7 @@ const formRules = computed<FormRules>(() => {
   }
 
   // 已就业时的验证规则
-  if (formData.employmentStatus === '1') {
+  if (formData.employmentStatus === 'SIGNED') { // 这里的 '1' 改为 'SIGNED'
     rules.companyName = [{ required: true, message: '请输入就业单位', trigger: 'blur' }]
     rules.position = [{ required: true, message: '请输入职位', trigger: 'blur' }]
   }
@@ -406,7 +406,7 @@ const handleEdit = (row: EmploymentListItem) => {
     studentName: row.studentName,
     studentNo: row.studentNo,
     majorName: row.majorName,
-    employmentStatus: row.employmentStatus || '0',
+    employmentStatus: row.employmentStatus || 'UNEMPLOYED',
     companyName: row.companyName || '',
     position: row.position || '',
     salary: row.salary || '',

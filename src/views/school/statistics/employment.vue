@@ -10,16 +10,16 @@
             <el-option label="2024届" :value="2024" />
           </el-select>
         </el-form-item>
-        <el-form-item label="学院">
-          <el-select v-model="selectedCollege" placeholder="全部学院" clearable style="width: 180px" @change="loadData">
-            <el-option
-              v-for="college in collegeList"
-              :key="college"
-              :label="college"
-              :value="college"
-            />
-          </el-select>
-        </el-form-item>
+<!--        <el-form-item label="学院">-->
+<!--          <el-select v-model="selectedCollege" placeholder="全部学院" clearable style="width: 180px" @change="loadData">-->
+<!--            <el-option-->
+<!--              v-for="college in collegeList"-->
+<!--              :key="college"-->
+<!--              :label="college"-->
+<!--              :value="college"-->
+<!--            />-->
+<!--          </el-select>-->
+<!--        </el-form-item>-->
         <el-form-item>
           <el-button type="primary" :icon="Refresh" @click="loadData">刷新数据</el-button>
         </el-form-item>
@@ -84,30 +84,30 @@
     <!-- 中间图表区域 -->
     <el-row :gutter="20" class="mb-4">
       <!-- 各学院就业率 -->
-      <el-col :span="12">
-        <el-card shadow="never" class="h-full" v-loading="loading">
-          <template #header>
-            <span class="font-bold text-gray-800 flex items-center">
-              <el-icon class="mr-2 text-blue-500"><School /></el-icon>
-              各学院就业率
-            </span>
-          </template>
-          <div ref="collegeChartRef" style="height: 350px;"></div>
-        </el-card>
-      </el-col>
+<!--      <el-col :span="12">-->
+<!--        <el-card shadow="never" class="h-full" v-loading="loading">-->
+<!--          <template #header>-->
+<!--            <span class="font-bold text-gray-800 flex items-center">-->
+<!--              <el-icon class="mr-2 text-blue-500"><School /></el-icon>-->
+<!--              各学院就业率-->
+<!--            </span>-->
+<!--          </template>-->
+<!--          <div ref="collegeChartRef" style="height: 350px;"></div>-->
+<!--        </el-card>-->
+<!--      </el-col>-->
 
       <!-- 各专业就业率 TOP10 -->
-      <el-col :span="12">
-        <el-card shadow="never" class="h-full" v-loading="loading">
-          <template #header>
-            <span class="font-bold text-gray-800 flex items-center">
-              <el-icon class="mr-2 text-green-500"><Histogram /></el-icon>
-              各专业就业率 TOP10
-            </span>
-          </template>
-          <div ref="majorChartRef" style="height: 350px;"></div>
-        </el-card>
-      </el-col>
+<!--      <el-col :span="12">-->
+<!--        <el-card shadow="never" class="h-full" v-loading="loading">-->
+<!--          <template #header>-->
+<!--            <span class="font-bold text-gray-800 flex items-center">-->
+<!--              <el-icon class="mr-2 text-green-500"><Histogram /></el-icon>-->
+<!--              各专业就业率 TOP10-->
+<!--            </span>-->
+<!--          </template>-->
+<!--          <div ref="majorChartRef" style="height: 350px;"></div>-->
+<!--        </el-card>-->
+<!--      </el-col>-->
     </el-row>
 
     <!-- 底部图表区域 -->
