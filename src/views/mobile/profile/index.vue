@@ -121,6 +121,20 @@
             <span class="text-gray-300 text-xs" v-else>暂无项目</span>
           </template>
         </van-cell>
+        <van-cell title="我加入的项目" is-link to="/student/my/joined-projects" center>
+          <template #icon>
+            <div class="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center mr-3">
+              <van-icon name="friends-o" class="text-indigo-500" size="18" />
+            </div>
+          </template>
+          <template #value>
+            <van-badge 
+              v-if="profile.joinedProjectCount > 0" 
+              :content="profile.joinedProjectCount" 
+              max="99"
+            />
+          </template>
+        </van-cell>
       </div>
 
       <div class="bg-white rounded-xl overflow-hidden shadow-sm">

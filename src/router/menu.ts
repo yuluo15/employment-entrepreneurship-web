@@ -338,6 +338,14 @@ const studentMenu: RouteRecordRaw[] = [
     component: () => import('@/views/mobile/my/projects.vue')
   },
 
+  // [新增] 我加入的项目列表
+  {
+    path: 'my/joined-projects',
+    name: 'MyJoinedProjects',
+    meta: { title: '我加入的项目', hideNavBar: false, hideTabBar: true },
+    component: () => import('@/views/mobile/my/joined-projects.vue')
+  },
+
   // [新增] 项目编辑/发布 (复用同一个页面)
   {
     path: 'my/project/edit/:id?', // id 是可选参数

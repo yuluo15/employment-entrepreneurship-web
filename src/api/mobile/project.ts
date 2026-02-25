@@ -115,3 +115,12 @@ export function handleApplication(applicationId: string, data: {
 }) {
     return request.put(`/mobile/project/application/${applicationId}/handle`, data)
 }
+
+// 11. 获取我加入的项目列表
+export function getMyJoinedProjects(params: {
+    pageNum: number
+    pageSize: number
+    status?: string
+}) {
+    return request.get('/mobile/my/joined-projects', { params })
+}
