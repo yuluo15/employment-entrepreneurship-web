@@ -65,6 +65,22 @@ export const getTeacherInfo = () => {
   })
 }
 
+// 更新教师信息
+export const updateTeacherInfo = (data: {
+  avatar?: string
+  gender?: string
+  phone: string
+  email?: string
+  expertise?: string
+  intro?: string
+}) => {
+  return request({
+    url: '/teacher/info/update',
+    method: 'put',
+    data
+  })
+}
+
 // 获取教师端项目详情
 export const getTeacherProjectDetail = (projectId: string) => {
   return request({
@@ -77,6 +93,14 @@ export const getTeacherProjectDetail = (projectId: string) => {
 export const getProjectGuidanceList = (projectId: string) => {
   return request({
     url: `/teacher/project/${projectId}/guidance`,
+    method: 'get'
+  })
+}
+
+// 获取项目领域字典
+export const getProjectDomains = () => {
+  return request({
+    url: '/teacher/projects/domain',
     method: 'get'
   })
 }

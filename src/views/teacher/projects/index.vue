@@ -126,7 +126,7 @@
 import { ref, onMounted, onActivated } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { showToast } from 'vant'
-import { getTeacherProjects } from '@/api/teacher'
+import { getTeacherProjects, getProjectDomains } from '@/api/teacher'
 
 defineOptions({ name: 'TeacherProjects' })
 
@@ -152,13 +152,9 @@ const statusOptions = [
   { text: '已落地', value: '3' }
 ]
 
-const domainOptions = [
-  { text: '全部领域', value: '' },
-  { text: '互联网+', value: 'internet' },
-  { text: '文化创意', value: 'culture' },
-  { text: '科技创新', value: 'tech' },
-  { text: '社会服务', value: 'service' }
-]
+const domainOptions = ref([
+  { text: '全部领域', value: '' }
+])
 
 // 列表数据
 const list = ref<any[]>([])
@@ -193,6 +189,9 @@ onActivated(() => {
 })
 
 onMounted(() => {
+  // 加载领域选项
+  loadDomainOptions()
+  
   // 从URL参数初始化
   if (route.query.scope) {
     activeTab.value = route.query.scope as string
@@ -205,6 +204,25 @@ onMounted(() => {
     onLoad()
   }
 })
+
+// 加载领域选项
+const loadDomainOptions = async () => {
+  try {
+    const res = await getProjectDomains()
+    const domains = res.data || []
+    
+    // 构建选项列表，使用 dictValue 作为 value，dictLabel 作为 text
+    domainOptions.value = [
+      { text: '全部领域', value: '' },
+      ...domains.map((item: any) => ({
+        text: item.dictLabel,
+        value: item.dictValue
+      }))
+    ]
+  } catch (error) {
+    console.error('加载领域选项失败', error)
+  }
+}
 
 // 加载数据
 const onLoad = async () => {

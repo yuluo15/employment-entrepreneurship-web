@@ -607,7 +607,7 @@ const teacherMenu: RouteRecordRaw[] = [
     path: 'profile/info',
     name: 'TeacherProfileInfo',
     meta: { title: '个人信息', hideNavBar: false, hideTabBar: true },
-    component: () => import('@/views/mobile/profile/info.vue') // 复用学生端的个人信息页
+    component: () => import('@/views/teacher/profile/info.vue') // 教师端独立的个人信息页
   },
   {
     path: 'settings/password',

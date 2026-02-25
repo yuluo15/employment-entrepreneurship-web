@@ -25,27 +25,27 @@
     </div>
 
     <!-- 统计卡片 -->
-    <div class="px-4 -mt-8 mb-4">
-      <div class="bg-white rounded-lg shadow-lg p-4">
-        <div class="grid grid-cols-3 divide-x divide-gray-100">
-          <div class="text-center">
-            <div class="text-xl font-bold text-purple-600">{{ teacherInfo.guidanceCount }}</div>
-            <div class="text-xs text-gray-500 mt-1">指导次数</div>
-          </div>
-          <div class="text-center">
-            <div class="text-xl font-bold text-blue-600">{{ teacherInfo.projectCount }}</div>
-            <div class="text-xs text-gray-500 mt-1">指导项目</div>
-          </div>
-          <div class="text-center">
-            <div class="flex items-center justify-center">
-              <div class="text-xl font-bold text-orange-500">{{ teacherInfo.ratingScore }}</div>
-              <van-icon name="star" color="#f59e0b" size="16" class="ml-1" />
-            </div>
-            <div class="text-xs text-gray-500 mt-1">评分</div>
-          </div>
-        </div>
-      </div>
-    </div>
+<!--    <div class="px-4 -mt-8 mb-4">-->
+<!--      <div class="bg-white rounded-lg shadow-lg p-4">-->
+<!--        <div class="grid grid-cols-3 divide-x divide-gray-100">-->
+<!--          <div class="text-center">-->
+<!--            <div class="text-xl font-bold text-purple-600">{{ teacherInfo.guidanceCount }}</div>-->
+<!--            <div class="text-xs text-gray-500 mt-1">指导次数</div>-->
+<!--          </div>-->
+<!--          <div class="text-center">-->
+<!--            <div class="text-xl font-bold text-blue-600">{{ teacherInfo.projectCount }}</div>-->
+<!--            <div class="text-xs text-gray-500 mt-1">指导项目</div>-->
+<!--          </div>-->
+<!--          <div class="text-center">-->
+<!--            <div class="flex items-center justify-center">-->
+<!--              <div class="text-xl font-bold text-orange-500">{{ teacherInfo.ratingScore }}</div>-->
+<!--              <van-icon name="star" color="#f59e0b" size="16" class="ml-1" />-->
+<!--            </div>-->
+<!--            <div class="text-xs text-gray-500 mt-1">评分</div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
 
     <!-- 个人信息 -->
     <van-cell-group :border="false" class="mb-3" title="个人信息">
@@ -77,38 +77,38 @@
           <van-icon name="lock" class="mr-3" color="#3b82f6" />
         </template>
       </van-cell>
-      <van-cell
-        title="通知设置"
-        is-link
-        @click="showToast('功能开发中')"
-      >
-        <template #icon>
-          <van-icon name="bell" class="mr-3" color="#f59e0b" />
-        </template>
-      </van-cell>
+<!--      <van-cell-->
+<!--        title="通知设置"-->
+<!--        is-link-->
+<!--        @click="showToast('功能开发中')"-->
+<!--      >-->
+<!--        <template #icon>-->
+<!--          <van-icon name="bell" class="mr-3" color="#f59e0b" />-->
+<!--        </template>-->
+<!--      </van-cell>-->
     </van-cell-group>
 
     <!-- 其他 -->
-    <van-cell-group :border="false" class="mb-3">
-      <van-cell
-        title="关于我们"
-        is-link
-        @click="showToast('功能开发中')"
-      >
-        <template #icon>
-          <van-icon name="info-o" class="mr-3" color="#6b7280" />
-        </template>
-      </van-cell>
-      <van-cell
-        title="帮助与反馈"
-        is-link
-        @click="showToast('功能开发中')"
-      >
-        <template #icon>
-          <van-icon name="question-o" class="mr-3" color="#6b7280" />
-        </template>
-      </van-cell>
-    </van-cell-group>
+<!--    <van-cell-group :border="false" class="mb-3">-->
+<!--      <van-cell-->
+<!--        title="关于我们"-->
+<!--        is-link-->
+<!--        @click="showToast('功能开发中')"-->
+<!--      >-->
+<!--        <template #icon>-->
+<!--          <van-icon name="info-o" class="mr-3" color="#6b7280" />-->
+<!--        </template>-->
+<!--      </van-cell>-->
+<!--      <van-cell-->
+<!--        title="帮助与反馈"-->
+<!--        is-link-->
+<!--        @click="showToast('功能开发中')"-->
+<!--      >-->
+<!--        <template #icon>-->
+<!--          <van-icon name="question-o" class="mr-3" color="#6b7280" />-->
+<!--        </template>-->
+<!--      </van-cell>-->
+<!--    </van-cell-group>-->
 
     <!-- 退出登录 -->
     <div class="px-4 mt-6">

@@ -104,15 +104,15 @@
       </div>
 
       <!-- 快捷入口 -->
-      <div class="bg-white rounded-lg shadow-sm p-3 mb-3">
-        <div class="text-sm font-bold text-gray-800 mb-3 px-1">快捷入口</div>
-        <van-grid :border="false" :column-num="4">
-          <van-grid-item icon="bulb-o" text="全网项目" @click="$router.push('/teacher/projects?scope=all')" />
-          <van-grid-item icon="shop-o" text="本校项目" @click="$router.push('/teacher/projects?scope=school')" />
-          <van-grid-item icon="records-o" text="指导记录" @click="$router.push('/teacher/guidance')" />
-          <van-grid-item icon="chart-trending-o" text="数据统计" @click="showToast('功能开发中')" />
-        </van-grid>
-      </div>
+<!--      <div class="bg-white rounded-lg shadow-sm p-3 mb-3">-->
+<!--        <div class="text-sm font-bold text-gray-800 mb-3 px-1">快捷入口</div>-->
+<!--        <van-grid :border="false" :column-num="4">-->
+<!--          <van-grid-item icon="bulb-o" text="全网项目" @click="$router.push('/teacher/projects?scope=all')" />-->
+<!--          <van-grid-item icon="shop-o" text="本校项目" @click="$router.push('/teacher/projects?scope=school')" />-->
+<!--          <van-grid-item icon="records-o" text="指导记录" @click="$router.push('/teacher/guidance')" />-->
+<!--          <van-grid-item icon="chart-trending-o" text="数据统计" @click="showToast('功能开发中')" />-->
+<!--        </van-grid>-->
+<!--      </div>-->
 
       <!-- 最近指导 -->
       <div v-if="recentGuidance.length > 0">

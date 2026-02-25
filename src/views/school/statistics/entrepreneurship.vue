@@ -77,17 +77,17 @@
     <!-- 中间图表区域 -->
     <el-row :gutter="20" class="mb-4">
       <!-- 各学院项目数量 -->
-<!--      <el-col :span="12">-->
-<!--        <el-card shadow="never" class="h-full" v-loading="loading">-->
-<!--          <template #header>-->
-<!--            <span class="font-bold text-gray-800 flex items-center">-->
-<!--              <el-icon class="mr-2 text-blue-500"><School /></el-icon>-->
-<!--              各学院项目数量-->
-<!--            </span>-->
-<!--          </template>-->
-<!--          <div ref="collegeChartRef" style="height: 350px;"></div>-->
-<!--        </el-card>-->
-<!--      </el-col>-->
+      <el-col :span="12">
+        <el-card shadow="never" class="h-full" v-loading="loading">
+          <template #header>
+            <span class="font-bold text-gray-800 flex items-center">
+              <el-icon class="mr-2 text-blue-500"><School /></el-icon>
+              各学院项目数量
+            </span>
+          </template>
+          <div ref="collegeChartRef" style="height: 350px;"></div>
+        </el-card>
+      </el-col>
 
       <!-- 项目状态分布 -->
       <el-col :span="12">
@@ -148,11 +148,11 @@
               <div class="desc">{{ successData.approvedCount || 0 }}/{{ successData.submittedCount || 0 }}</div>
             </div>
             <el-divider />
-            <div class="stat-item">
-              <div class="label">项目落地率</div>
-              <div class="value text-blue-600">{{ successData.landingRate || '0%' }}</div>
-              <div class="desc">{{ successData.landedCount || 0 }}/{{ successData.approvedCount || 0 }}</div>
-            </div>
+<!--            <div class="stat-item">-->
+<!--              <div class="label">项目落地率</div>-->
+<!--              <div class="value text-blue-600">{{ successData.landingRate || '0%' }}</div>-->
+<!--              <div class="desc">{{ successData.landedCount || 0 }}/{{ successData.approvedCount || 0 }}</div>-->
+<!--            </div>-->
             <el-divider />
             <div class="stat-item">
               <div class="label">平均团队规模</div>
