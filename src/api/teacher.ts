@@ -48,6 +48,7 @@ export const getGuidanceStats = () => {
 // 发表指导意见
 export const addGuidance = (data: {
   projectId: string
+  stageId: string // 新增：阶段ID
   content: string
 }) => {
   return request({
@@ -101,6 +102,22 @@ export const getProjectGuidanceList = (projectId: string) => {
 export const getProjectDomains = () => {
   return request({
     url: '/teacher/projects/domain',
+    method: 'get'
+  })
+}
+
+// 获取项目阶段列表（教师端）
+export const getTeacherProjectStages = (projectId: string) => {
+  return request({
+    url: `/teacher/project/${projectId}/stages`,
+    method: 'get'
+  })
+}
+
+// 获取阶段指导记录（教师端）
+export const getTeacherStageGuidance = (stageId: string) => {
+  return request({
+    url: `/teacher/project/stage/${stageId}/guidance`,
     method: 'get'
   })
 }

@@ -123,18 +123,97 @@
           <!-- 暂无指导 -->
           <van-empty v-else description="暂无指导记录" image-size="80" />
         </div>
+
+        <!-- 项目阶段 -->
+        <div v-if="stages.length > 0" class="bg-white rounded-xl p-4 shadow-sm">
+          <h3 class="font-bold text-gray-800 mb-3 border-l-4 border-purple-500 pl-2 text-sm">项目阶段</h3>
+          <van-collapse v-model="activeStages" accordion>
+            <van-collapse-item
+              v-for="stage in stages"
+              :key="stage.stageId"
+              :name="stage.stageId"
+            >
+              <template #title>
+                <div class="flex items-center justify-between w-full pr-4">
+                  <span class="font-medium">{{ stage.stageName }}</span>
+                  <van-tag :type="getStageTagType(stage.status)" size="small">
+                    {{ getStageStatusText(stage.status) }}
+                  </van-tag>
+                </div>
+              </template>
+              
+              <div class="p-2">
+                <p class="text-sm text-gray-600 mb-3">{{ stage.description || '暂无描述' }}</p>
+                
+                <!-- 阶段指导记录 -->
+                <div v-if="stage.guidanceList && stage.guidanceList.length > 0" class="space-y-2 mb-3">
+                  <div class="text-xs text-gray-500 mb-2">指导记录（{{ stage.guidanceList.length }}条）</div>
+                  <div
+                    v-for="guidance in stage.guidanceList"
+                    :key="guidance.id"
+                    class="bg-gray-50 rounded p-2"
+                  >
+                    <div class="text-xs text-gray-500 mb-1">
+                      {{ guidance.teacherName }} · {{ guidance.createTime }}
+                    </div>
+                    <div class="text-sm text-gray-700">{{ guidance.content }}</div>
+                  </div>
+                </div>
+                <div v-else class="text-xs text-gray-400 mb-3">暂无指导记录</div>
+                
+                <!-- 操作按钮区域 -->
+                <div v-if="projectDetail.isMentor">
+                  <!-- 进行中的阶段：可以发表指导 -->
+                  <van-button
+                    v-if="stage.status === 'IN_PROGRESS'"
+                    type="primary"
+                    size="small"
+                    block
+                    @click="openGuidanceDialog(stage.stageId)"
+                  >
+                    发表指导意见
+                  </van-button>
+                  
+                  <!-- 未开始的阶段 -->
+                  <div v-else-if="stage.status === 'NOT_STARTED'" class="text-center text-xs text-gray-400 py-2">
+                    <van-icon name="clock-o" class="mr-1" />
+                    该阶段尚未开始
+                  </div>
+                  
+                  <!-- 已完成的阶段 -->
+                  <div v-else-if="stage.status === 'COMPLETED'" class="text-center text-xs text-gray-400 py-2">
+                    <van-icon name="checked" class="mr-1" />
+                    该阶段已完成
+                  </div>
+                </div>
+                <div v-else class="text-center text-xs text-gray-400 py-2">
+                  <van-icon name="info-o" class="mr-1" />
+                  您不是该项目的指导教师
+                </div>
+              </div>
+            </van-collapse-item>
+          </van-collapse>
+        </div>
       </div>
     </div>
 
     <!-- 底部操作栏 -->
-    <van-action-bar style="z-index: 2000; padding-bottom: env(safe-area-inset-bottom);">
+    <van-action-bar v-if="projectDetail.isMentor && stages.length === 0" style="z-index: 2000; padding-bottom: env(safe-area-inset-bottom);">
       <van-action-bar-button
         color="linear-gradient(to right, #8b5cf6, #7c3aed)"
         type="primary"
         text="发表指导意见"
-        @click="showGuidanceDialog = true"
+        @click="openGuidanceDialog('')"
       />
     </van-action-bar>
+
+    <!-- 非指导教师提示 -->
+    <div v-else-if="!projectDetail.isMentor && stages.length === 0" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 text-center" style="padding-bottom: env(safe-area-inset-bottom);">
+      <div class="text-sm text-gray-500">
+        <van-icon name="info-o" class="mr-1" />
+        您不是该项目的指导教师，无法发表指导意见
+      </div>
+    </div>
 
     <!-- 发表指导对话框 -->
     <van-dialog
@@ -159,8 +238,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { showToast, showLoadingToast, closeToast } from 'vant'
-import { getTeacherProjectDetail, getProjectGuidanceList, addGuidance } from '@/api/teacher'
+import { showToast, showLoadingToast, closeToast, showConfirmDialog } from 'vant'
+import { getTeacherProjectDetail, getProjectGuidanceList, addGuidance, getTeacherProjectStages, getTeacherStageGuidance } from '@/api/teacher'
 
 const route = useRoute()
 const router = useRouter()
@@ -177,9 +256,14 @@ const projectDetail = ref<any>({})
 // 指导记录列表
 const guidanceList = ref<any[]>([])
 
+// 项目阶段列表
+const stages = ref<any[]>([])
+const activeStages = ref<string[]>([])
+
 // 指导对话框
 const showGuidanceDialog = ref(false)
 const guidanceContent = ref('')
+const currentStageId = ref('')
 
 // 加载项目详情
 const loadProjectDetail = async () => {
@@ -202,11 +286,37 @@ const loadGuidanceList = async () => {
   }
 }
 
+// 加载项目阶段
+const loadProjectStages = async () => {
+  try {
+    const res = await getTeacherProjectStages(projectId)
+    stages.value = res.data || []
+    
+    // 为每个阶段加载指导记录
+    for (const stage of stages.value) {
+      try {
+        const guidanceRes = await getTeacherStageGuidance(stage.stageId)
+        stage.guidanceList = guidanceRes.data || []
+      } catch (e) {
+        stage.guidanceList = []
+      }
+    }
+  } catch (error) {
+    console.error('加载项目阶段失败', error)
+  }
+}
+
 // 提交指导意见
 const handleGuidanceSubmit = async (action: string) => {
   if (action === 'confirm') {
     if (!guidanceContent.value || guidanceContent.value.trim().length < 10) {
       showToast('请输入至少10个字的指导意见')
+      return false
+    }
+
+    // 如果项目有阶段，必须选择阶段
+    if (stages.value.length > 0 && !currentStageId.value) {
+      showToast('请选择要指导的阶段')
       return false
     }
 
@@ -219,15 +329,21 @@ const handleGuidanceSubmit = async (action: string) => {
     try {
       await addGuidance({
         projectId: projectId,
+        stageId: currentStageId.value || '', // 如果没有阶段，传空字符串
         content: guidanceContent.value.trim()
       })
 
       closeToast()
       showToast('指导意见发表成功')
       guidanceContent.value = ''
+      currentStageId.value = ''
       
-      // 重新加载指导记录
-      await loadGuidanceList()
+      // 重新加载数据
+      if (stages.value.length > 0) {
+        await loadProjectStages()
+      } else {
+        await loadGuidanceList()
+      }
       
       return true
     } catch (error) {
@@ -237,6 +353,12 @@ const handleGuidanceSubmit = async (action: string) => {
     }
   }
   return true
+}
+
+// 显示指导对话框
+const openGuidanceDialog = (stageId: string) => {
+  currentStageId.value = stageId
+  showGuidanceDialog.value = true
 }
 
 // 获取状态标签类型
@@ -276,12 +398,33 @@ const getDomainLabel = (domain: string) => {
   return domains.map(d => map[d] || d).join('、')
 }
 
+// 获取阶段状态标签类型
+const getStageTagType = (status: string) => {
+  const map: Record<string, string> = {
+    'NOT_STARTED': 'default',
+    'IN_PROGRESS': 'primary',
+    'COMPLETED': 'success'
+  }
+  return map[status] || 'default'
+}
+
+// 获取阶段状态文本
+const getStageStatusText = (status: string) => {
+  const map: Record<string, string> = {
+    'NOT_STARTED': '未开始',
+    'IN_PROGRESS': '进行中',
+    'COMPLETED': '已完成'
+  }
+  return map[status] || '未知'
+}
+
 // 初始化
 onMounted(async () => {
   loading.value = true
   await Promise.all([
     loadProjectDetail(),
-    loadGuidanceList()
+    loadGuidanceList(),
+    loadProjectStages()
   ])
   loading.value = false
 })

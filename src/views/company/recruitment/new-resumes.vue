@@ -444,10 +444,16 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="120" align="center" fixed="right">
+        <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="handleViewAIResume(row.resumeId)">
               查看简历
+            </el-button>
+            <el-button link type="success" size="small" @click="handleArrangeAIInterview(row)">
+              安排面试
+            </el-button>
+            <el-button link type="danger" size="small" @click="handleRejectAI(row)">
+              不合适
             </el-button>
           </template>
         </el-table-column>
@@ -726,6 +732,49 @@ const getMatchScoreType = (score: number) => {
   if (score >= 80) return 'primary'
   if (score >= 70) return 'warning'
   return 'info'
+}
+
+// 安排AI筛选结果的面试
+const handleArrangeAIInterview = (row: ResumeMatchVO) => {
+  // 需要先根据 resumeId 和 jobId 查找或创建投递记录
+  // 然后安排面试
+  interviewForm.deliveryId = row.deliveryId || '' // 如果AI结果中有deliveryId
+  interviewForm.interviewTime = ''
+  interviewForm.duration = 60
+  interviewForm.type = 1
+  interviewForm.location = ''
+  interviewForm.notes = `AI推荐候选人，匹配度：${row.matchScore}%`
+  interviewDialogVisible.value = true
+}
+
+// 拒绝AI筛选结果的候选人
+const handleRejectAI = async (row: ResumeMatchVO) => {
+  try {
+    const result = await ElMessageBox.prompt('请输入拒绝原因（选填）', '确认拒绝', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      inputType: 'textarea',
+      inputPlaceholder: '请输入拒绝原因'
+    })
+    
+    // 如果有deliveryId，直接拒绝
+    if (row.deliveryId) {
+      await rejectDelivery(row.deliveryId, result.value)
+      ElMessage.success('操作成功')
+      // 从AI筛选结果中移除
+      const index = aiScreenResults.value.findIndex(r => r.resumeId === row.resumeId)
+      if (index > -1) {
+        aiScreenResults.value.splice(index, 1)
+      }
+    } else {
+      ElMessage.warning('该候选人尚未投递简历，无法拒绝')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('操作失败', error)
+      ElMessage.error('操作失败')
+    }
+  }
 }
 
 onMounted(() => {

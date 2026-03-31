@@ -15,10 +15,11 @@
         </template>
       </van-search>
 
-      <!-- Tab切换：全网项目 / 本校项目 -->
+      <!-- Tab切换：我的项目 / 本校项目 / 全网项目 -->
       <van-tabs v-model:active="activeTab" @change="onTabChange" sticky offset-top="0">
-        <van-tab title="全网项目" name="all" />
+        <van-tab title="我的项目" name="my" />
         <van-tab title="本校项目" name="school" />
+        <van-tab title="全网项目" name="all" />
       </van-tabs>
 
       <!-- 筛选栏 -->
@@ -134,7 +135,7 @@ const router = useRouter()
 const route = useRoute()
 
 // Tab状态
-const activeTab = ref('school') // 默认显示本校项目
+const activeTab = ref('my') // 默认显示我的项目
 
 // 搜索和筛选
 const keyword = ref('')

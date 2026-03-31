@@ -204,7 +204,7 @@ defineOptions({ name: 'StudentHome' })
 const router = useRouter()
 const dummySearch = ref('')
 const banners = [
-  { title: '2026届秋季校园双选会', color: '#3b82f6', url: '' },
+  { title: '2026届校园双选会', color: '#3b82f6', url: '' },
   { title: '大学生创业创新大赛报名', color: '#8b5cf6', url: '' },
   { title: '简历门诊：资深HR在线修改', color: '#f59e0b', url: '' }
 ]

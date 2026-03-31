@@ -19,6 +19,7 @@ export interface ResumeMatchVO {
   matchReason: string  // 匹配理由
   phone: string
   email: string
+  deliveryId?: string  // 投递记录ID（如果已投递）
 }
 
 /**

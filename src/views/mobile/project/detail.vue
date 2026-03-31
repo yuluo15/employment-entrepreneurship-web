@@ -85,6 +85,100 @@
             {{ contactButtonConfig.text }}
           </van-button>
         </div>
+
+        <!-- 项目阶段 -->
+        <div v-if="stages.length > 0" class="bg-white rounded-xl p-4 shadow-sm">
+          <h3 class="font-bold text-gray-800 mb-3 border-l-4 border-purple-500 pl-2 text-sm">项目阶段</h3>
+          <van-collapse v-model="activeStages" accordion>
+            <van-collapse-item
+              v-for="(stage, index) in stages"
+              :key="stage.stageId"
+              :name="stage.stageId"
+            >
+              <template #title>
+                <div class="flex items-center justify-between w-full pr-4">
+                  <div class="flex items-center gap-2">
+                    <van-icon :name="getStageIcon(stage.status)" :color="getStageIconColor(stage.status)" size="18" />
+                    <span class="font-medium">{{ stage.stageName }}</span>
+                  </div>
+                  <van-tag :type="getStageTagType(stage.status)" size="small">
+                    {{ getStageStatusText(stage.status) }}
+                  </van-tag>
+                </div>
+              </template>
+              
+              <div class="p-2">
+                <p class="text-sm text-gray-600 mb-3">{{ stage.description || '暂无描述' }}</p>
+                
+                <!-- 阶段指导记录 -->
+                <div v-if="stage.guidanceList && stage.guidanceList.length > 0" class="space-y-2 mb-3">
+                  <div class="text-xs text-gray-500 mb-2 font-medium">指导记录（{{ stage.guidanceList.length }}条）</div>
+                  <div
+                    v-for="guidance in stage.guidanceList"
+                    :key="guidance.id"
+                    class="bg-gray-50 rounded-lg p-3"
+                  >
+                    <div class="flex items-start gap-2 mb-2">
+                      <van-image
+                        round
+                        width="32px"
+                        height="32px"
+                        :src="guidance.teacherAvatar"
+                        class="shrink-0"
+                      >
+                        <template #default>
+                          <div class="w-full h-full bg-purple-100 flex items-center justify-center">
+                            <van-icon name="user-o" size="16" color="#8b5cf6" />
+                          </div>
+                        </template>
+                      </van-image>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                          <span class="text-sm font-medium text-gray-800">{{ guidance.teacherName }}</span>
+                          <span class="text-xs text-gray-400">{{ guidance.createTime }}</span>
+                        </div>
+                        <div class="text-sm text-gray-600 leading-relaxed">{{ guidance.content }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="text-xs text-gray-400 mb-3 text-center py-2">暂无指导记录</div>
+                
+                <!-- 项目负责人可以更新阶段状态 -->
+                <div v-if="detail.isOwner" class="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <van-button
+                    v-if="stage.status === 'NOT_STARTED'"
+                    size="small"
+                    type="primary"
+                    plain
+                    block
+                    icon="play-circle-o"
+                    @click="updateStageStatus(stage.stageId, 'IN_PROGRESS')"
+                  >
+                    开始此阶段
+                  </van-button>
+                  <van-button
+                    v-if="stage.status === 'IN_PROGRESS'"
+                    size="small"
+                    type="success"
+                    plain
+                    @click="updateStageStatus(stage.stageId, 'COMPLETED')"
+                  >
+                    标记完成
+                  </van-button>
+                  <van-button
+                    v-if="stage.status === 'IN_PROGRESS'"
+                    size="small"
+                    plain
+                    @click="updateStageStatus(stage.stageId, 'NOT_STARTED')"
+                  >
+                    暂停
+                  </van-button>
+                </div>
+              </div>
+            </van-collapse-item>
+          </van-collapse>
+        </div>
       </div>
     </div>
 
@@ -143,8 +237,8 @@
 // ... (script 保持不变)
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { getProjectDetail, type ProjectDetailVo, applyToJoinProject } from '@/api/mobile/project'
-import { showToast, showLoadingToast, closeToast, showDialog } from 'vant'
+import { getProjectDetail, type ProjectDetailVo, applyToJoinProject, getProjectStages, updateStageStatus as updateStageStatusApi, type ProjectStageVo, getStageGuidance } from '@/api/mobile/project'
+import { showToast, showLoadingToast, closeToast, showDialog, showConfirmDialog } from 'vant'
 import { toggleCollection } from '@/api/mobile/interaction' // [新增]
 
 const route = useRoute()
@@ -153,12 +247,117 @@ const loading = ref(true)
 
 const isCollected = ref(false) // [新增] 收藏状态
 
+// 项目阶段
+const stages = ref<ProjectStageVo[]>([])
+const activeStages = ref<string[]>([])
+
 // 申请对话框
 const showApplyDialog = ref(false)
 const applyForm = ref({
   applicationReason: '',
   skills: ''
 })
+
+// 加载项目阶段
+const loadStages = async () => {
+  if (!detail.value.projectId) return
+  try {
+    const res = await getProjectStages(detail.value.projectId)
+    stages.value = res.data || []
+    
+    // 为每个阶段加载指导记录
+    for (const stage of stages.value) {
+      try {
+        const guidanceRes = await getStageGuidance(stage.stageId)
+        stage.guidanceList = guidanceRes.data || []
+      } catch (e) {
+        stage.guidanceList = []
+      }
+    }
+  } catch (error) {
+    console.error('加载项目阶段失败:', error)
+  }
+}
+
+// 当前进行中的阶段索引
+const currentStageIndex = computed(() => {
+  const index = stages.value.findIndex(s => s.status === 'IN_PROGRESS')
+  return index >= 0 ? index : stages.value.findIndex(s => s.status === 'NOT_STARTED')
+})
+
+// 更新阶段状态
+const updateStageStatus = async (stageId: string, status: string) => {
+  const statusText = {
+    'NOT_STARTED': '未开始',
+    'IN_PROGRESS': '进行中',
+    'COMPLETED': '已完成'
+  }[status] || status
+  
+  try {
+    await showConfirmDialog({
+      title: '确认操作',
+      message: `确定将该阶段标记为"${statusText}"吗？`
+    })
+    
+    const toast = showLoadingToast({
+      message: '更新中...',
+      forbidClick: true,
+      duration: 0
+    })
+    
+    await updateStageStatusApi(stageId, status)
+    closeToast()
+    showToast('更新成功')
+    
+    // 重新加载阶段数据
+    await loadStages()
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      closeToast()
+      showToast('更新失败: ' + (error.message || '未知错误'))
+    }
+  }
+}
+
+// 获取阶段图标
+const getStageIcon = (status: string) => {
+  const map: Record<string, string> = {
+    'NOT_STARTED': 'clock-o',
+    'IN_PROGRESS': 'play-circle-o',
+    'COMPLETED': 'checked'
+  }
+  return map[status] || 'clock-o'
+}
+
+// 获取阶段图标颜色
+const getStageIconColor = (status: string) => {
+  const map: Record<string, string> = {
+    'NOT_STARTED': '#999',
+    'IN_PROGRESS': '#1989fa',
+    'COMPLETED': '#07c160'
+  }
+  return map[status] || '#999'
+}
+
+// 获取阶段状态标签类型
+const getStageTagType = (status: string) => {
+  const map: Record<string, string> = {
+    'NOT_STARTED': 'default',
+    'IN_PROGRESS': 'primary',
+    'COMPLETED': 'success'
+  }
+  return map[status] || 'default'
+}
+
+// 获取阶段状态文本
+const getStageStatusText = (status: string) => {
+  const map: Record<string, string> = {
+    'NOT_STARTED': '未开始',
+    'IN_PROGRESS': '进行中',
+    'COMPLETED': '已完成'
+  }
+  return map[status] || '未知'
+}
 
 onMounted(async () => {
   loading.value = true
@@ -168,6 +367,9 @@ onMounted(async () => {
     detail.value = res.data
     // [核心修改] 初始化收藏状态
     isCollected.value = !!res.data.isCollected
+    
+    // 加载项目阶段
+    await loadStages()
   } finally {
     setTimeout(() => { loading.value = false }, 300)
   }

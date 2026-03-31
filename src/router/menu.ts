@@ -37,7 +37,7 @@ const adminMenu: RouteRecordRaw[] = [
   {
     path: 'home',
     name: 'AdminHome',
-    meta: { title: '平台监管', affix: true },
+    meta: { title: '首页', affix: true },
     component: () => import('@/views/admin/home/index.vue'),
   },
 
